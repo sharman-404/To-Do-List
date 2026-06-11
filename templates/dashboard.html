@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace Dashboard - Bloom AI</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sky: {
+                            200: "#cfd89a", 300: "#b5c46a", 400: "#9aad3d",
+                            500: "#7d8f28", 950: "#111504"
+                        },
+                        indigo: {
+                            300: "#c8a472", 400: "#b08348",
+                            500: "#8f6530", 950: "#130d04"
+                        },
+                        violet: {
+                            400: "#b08348", 500: "#8f6530"
+                        },
+                        slate: {
+                            50: "#faf8f3", 100: "#f0ebe0", 200: "#ddd4c2",
+                            300: "#c4b89a", 400: "#a89870", 500: "#8a7a58",
+                            600: "#6e6040", 700: "#524830", 800: "#3a3222",
+                            850: "#2e2819", 900: "#231e12", 950: "#17120a"
+                        },
+                        amber: {
+                            300: "#e8c97a", 400: "#c9a03e", 500: "#a07a28",
+                            900: "#2a1f08", 950: "#1a1305"
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Lucide Library for Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="selection:bg-sky-500/30 selection:text-sky-200 bg-slate-950 text-slate-100 min-h-screen font-sans flex overflow-x-hidden">
+    <!-- Sidebar Menu (Large screens) -->
+    <aside class="hidden md:flex flex-col w-64 border-r border-slate-900/50 bg-slate-950 p-6 shrink-0 z-20 relative">
+        <div class="flex items-center space-x-3 mb-8">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center font-bold font-display text-slate-950 text-sm shadow shadow-sky-500/20">B</div>
+            <span class="font-display font-bold text-lg tracking-wide bg-gradient-to-r from-slate-100 to-sky-400 bg-clip-text text-transparent">Bloom Hub</span>
+        </div>
+        <nav class="flex-1 space-y-1.5 text-sm">
+            <a href="/dashboard" class="flex items-center space-x-3 px-4 py-3 bg-sky-500/10 text-sky-400 hover:text-sky-300 rounded-xl font-medium transition">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/tasks" class="flex items-center space-x-3 px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-900/40 rounded-xl font-medium transition">
+                <i data-lucide="check-square" class="w-4 h-4"></i>
+                <span>Manage Tasks</span>
+            </a>
+            <a id="adminTabLink" href="/admin" class="hidden flex items-center space-x-3 px-4 py-3 text-amber-500/80 hover:text-amber-400 hover:bg-amber-950/10 rounded-xl font-medium border border-transparent hover:border-amber-900/20 transition">
+                <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                <span>Admin Console</span>
+            </a>
+        </nav>
+        <div class="pt-6 border-t border-slate-900/40">
+            <button id="logoutBtn" class="w-full flex items-center space-x-3 px-4 py-3 text-rose-400 hover:text-rose-300 hover:bg-rose-950/10 rounded-xl font-medium border border-transparent hover:border-rose-900/20 transition text-sm">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    </aside>
+    <!-- Main Working Canvas -->
+    <div class="flex-1 min-w-0 flex flex-col min-h-screen relative">
+        <!-- Background Ambient Glows -->
+        <div class="ambient-glow top-0 right-0 translate-x-[20%] -translate-y-[20%] opacity-40"></div>
+        <div class="ambient-glow bottom-0 left-1/3 -translate-y-[20%] opacity-30"></div>
+        <!-- Mobile Navigation Menu Header -->
+        <header class="md:hidden flex items-center justify-between px-6 py-4 border-b border-slate-900/40 bg-slate-950 relative z-20">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 rounded bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center font-bold text-slate-950 text-xs">B</div>
+                <span class="font-display font-bold text-base tracking-wide text-slate-100">Bloom</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/tasks" class="text-xs font-medium text-slate-400 hover:text-slate-200">Tasks</a>
+                <a id="adminTabMobile" href="/admin" style="display:none;" class="text-xs font-medium text-amber-400">Admin</a>
+                <button id="logoutBtnMobile" class="text-xs font-medium text-rose-400">Sign Out</button>
+            </div>
+        </header>
+        <!-- Primary Workspace Contents -->
+        <main class="flex-1 overflow-y-auto px-6 py-8 relative z-10 w-full max-w-6xl mx-auto">
+            <!-- Greeting & Profile Intro -->
+            <section class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-8 border-b border-slate-900/40">
+                <div>
+                    <h2 class="font-display text-2xl sm:text-3xl font-bold tracking-tight text-slate-100">
+                        Welcome, <span id="usernameDisplay" class="bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">User</span>!
+                    </h2>
+                    <p class="text-slate-400 text-sm mt-1">Here is a centralized check of your smart productivity goals.</p>
+                </div>
+                <div class="flex items-center space-x-3 shrink-0">
+                    <span id="userRoleBadge" class="hidden px-2.5 py-1 border border-amber-900/30 bg-amber-950/20 text-amber-300 text-2xs uppercase tracking-wide font-mono rounded-lg">User</span>
+                    <a href="/tasks" class="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold rounded-xl text-sm transition shadow-md shadow-sky-500/10 hover:shadow-sky-500/15 flex items-center space-x-1.5">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>New Task</span>
+                    </a>
+                </div>
+            </section>
+            <!-- Statistics Grid -->
+            <section class="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 pb-10">
+                <!-- Statistic 1 -->
+                <div class="p-6 rounded-2xl glass-panel flex flex-col justify-between">
+                    <div>
+                        <span class="text-3xs font-mono tracking-widest uppercase text-slate-400 font-semibold">Total Workloads</span>
+                        <h3 id="statsTotal" class="font-display font-bold text-3xl text-slate-100 mt-2">0</h3>
+                    </div>
+                </div>
+                <!-- Statistic 2 -->
+                <div class="p-6 rounded-2xl glass-panel flex flex-col justify-between border-l-2 border-l-sky-500/50">
+                    <div>
+                        <span class="text-3xs font-mono tracking-widest uppercase text-sky-400 font-semibold">Pending Checklist</span>
+                        <h3 id="statsPending" class="font-display font-bold text-3xl text-slate-100 mt-2">0</h3>
+                    </div>
+                </div>
+                <!-- Statistic 3 -->
+                <div class="p-6 rounded-2xl glass-panel flex flex-col justify-between border-l-2 border-l-emerald-500/50">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-3xs font-mono tracking-widest uppercase text-emerald-400 font-semibold">Completed Milestones</span>
+                            <h3 id="statsCompleted" class="font-display font-bold text-3xl text-slate-100 mt-2">0</h3>
+                        </div>
+                        <div class="text-right">
+                            <span id="completionPercent" class="font-mono text-sm font-semibold text-emerald-400">0%</span>
+                        </div>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-900/60 rounded-full mt-4 overflow-hidden">
+                        <div id="completionProgress" class="h-full bg-gradient-to-r from-emerald-500 to-sky-500 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </section>
+            <!-- Column Blocks -->
+            <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Deadlines column -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="p-6 rounded-2xl glass-panel">
+                        <h3 class="font-display font-bold text-base text-slate-100 flex items-center space-x-2">
+                            <i data-lucide="calendar" class="w-4 h-4 text-sky-400"></i>
+                            <span>Schedule Visualizer</span>
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-1 mb-4">Daily load overview for the current calendar cycle.</p>
+                        <div id="calendarGrid" class="grid grid-cols-7 gap-2">
+                            <!-- Populated via dashboard.js -->
+                            <div class="p-3 h-16 bg-slate-900/20 rounded-xl animate-pulse"></div>
+                            <div class="p-3 h-16 bg-slate-900/20 rounded-xl animate-pulse"></div>
+                            <div class="p-3 h-16 bg-slate-900/20 rounded-xl animate-pulse"></div>
+                            <div class="p-3 h-16 bg-slate-900/20 rounded-xl animate-pulse"></div>
+                            <div class="p-3 h-16 bg-slate-900/20 rounded-xl animate-pulse"></div>
+                            <div class="p-3 h-16 bg-slate-900/20 rounded-xl animate-pulse"></div>
+                            <div class="p-3 h-16 bg-slate-900/20 rounded-xl animate-pulse"></div>
+                        </div>
+                    </div>
+                    <!-- Upcoming List -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-display font-bold text-base text-slate-100 flex items-center space-x-2">
+                                <i data-lucide="clock" class="w-4 h-4 text-sky-400"></i>
+                                <span>Upcoming Deadlines</span>
+                            </h3>
+                            <a href="/tasks" class="text-xs text-sky-400 font-medium hover:underline flex items-center space-x-0.5">
+                                <span>Go to full checklist</span>
+                                <span>&rarr;</span>
+                            </a>
+                        </div>
+                        <div id="upcomingTasksList" class="space-y-3">
+                            <!-- Populated via dashboard.js -->
+                            <div class="p-5 bg-slate-900/30 border border-slate-900 rounded-xl animate-pulse"></div>
+                            <div class="p-5 bg-slate-900/30 border border-slate-900 rounded-xl animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Gemini Coach Column -->
+                <div class="lg:col-span-5">
+                    <div class="p-6 rounded-2xl glass-panel relative overflow-hidden flex flex-col h-full min-h-[420px]">
+                        <!-- Decorative gradient corner -->
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-sky-500/10 rounded-bl-full filter blur-md"></div>
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-900/40">
+                            <div>
+                                <h3 class="font-display font-bold text-base text-slate-100 flex items-center space-x-2">
+                                    <i data-lucide="sparkles" class="w-4 h-4 text-sky-400"></i>
+                                    <span>Gemini Insights Suite</span>
+                                </h3>
+                                <p class="text-3xs text-slate-400 tracking-wide font-mono uppercase mt-0.5">Generative AI Diagnostics Context</p>
+                            </div>
+                            <button id="refreshInsightsBtn" title="Sync Insights" class="p-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-xl text-slate-400 hover:text-sky-400 transition">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        <!-- Panel wrapper where insights are rendered -->
+                        <div id="insightsContainer" class="flex-1 py-4 space-y-4 overflow-y-auto max-h-[400px] scrollbar-thin">
+                            <!-- Populated via dashboard.js -->
+                            <div class="p-8 text-center flex flex-col items-center justify-center space-y-2">
+                                <div class="w-5 h-5 border-2 border-sky-400/20 border-t-sky-400 rounded-full animate-spin"></div>
+                                <p class="text-xs text-slate-500 font-mono">CONSTRUCTING PROMPT REGISTERS...</p>
+                            </div>
+                        </div>
+                        <div class="pt-4 border-t border-slate-900/40 text-[10px] text-slate-500 flex items-center justify-between font-mono">
+                            <span>Status: Fallback-Reinforced API</span>
+                            <span>Model: Gemini 3.5 Flash</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <!-- Init Lucide Icons -->
+    <script>
+        lucide.createIcons();
+        // Handlers for mobile logout buttons
+        document.getElementById("logoutBtnMobile")?.addEventListener("click", () => {
+            localStorage.clear();
+            window.location.href = "/";
+        });
+    </script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Home Portal</title>
+        <link rel="stylesheet" href="/static/css/style.css">
+    </head>
+
+    <body>
+        <nav class="navbar">
+            <div class="logo">
+                Todo Management Portal
+            </div>
+            <button
+                class="btn btn-danger"
+                onclick="logout()"
+            >
+                Logout
+            </button>
+        </nav>
+        <div class="container">
+            <div class="card">
+                <h1 id="welcomeText">
+                    Welcome
+                </h1>
+                <p>
+                    Select a feature below.
+                </p>
+            </div>
+            <div id="menuArea">
+            </div>
+        </div>
+        <script src="/static/js/home.js"></script>
+    </body>
+</html>

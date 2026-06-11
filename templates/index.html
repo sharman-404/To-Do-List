@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloom AI - Intelligent Workspace Companion</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sky: {
+                            200: "#cfd89a", 300: "#b5c46a", 400: "#9aad3d",
+                            500: "#7d8f28", 950: "#111504"
+                        },
+                        indigo: {
+                            300: "#c8a472", 400: "#b08348",
+                            500: "#8f6530", 950: "#130d04"
+                        },
+                        violet: {
+                            400: "#b08348", 500: "#8f6530"
+                        },
+                        slate: {
+                            50: "#faf8f3", 100: "#f0ebe0", 200: "#ddd4c2",
+                            300: "#c4b89a", 400: "#a89870", 500: "#8a7a58",
+                            600: "#6e6040", 700: "#524830", 800: "#3a3222",
+                            850: "#2e2819", 900: "#231e12", 950: "#17120a"
+                        },
+                        amber: {
+                            300: "#e8c97a", 400: "#c9a03e", 500: "#a07a28",
+                            900: "#2a1f08", 950: "#1a1305"
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Lucide Library for Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="selection:bg-sky-500/30 selection:text-sky-200 relative overflow-x-hidden bg-slate-950 text-slate-100 min-h-screen">
+
+    <!-- Ambient Glowing Spots -->
+    <div class="ambient-glow top-0 left-0 -translate-x-[20%] -translate-y-[25%] opacity-70"></div>
+    <div class="ambient-glow bottom-0 right-0 translate-x-[20%] translate-y-[25%] opacity-60"></div>
+
+    <!-- Navigation Header -->
+    <header class="relative z-10 w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between border-b border-slate-900/40">
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center font-bold font-display text-slate-950 shadow-lg shadow-sky-500/20 text-lg">B</div>
+            <span class="font-display font-bold text-xl tracking-wide bg-gradient-to-r from-slate-100 via-slate-100 to-sky-400 bg-clip-text text-transparent">Bloom <span class="text-sky-400 font-mono text-xs ml-1 font-normal uppercase border border-sky-400/20 px-1.5 py-0.5 rounded-md">Workspace</span></span>
+        </div>
+        <nav id="navAuthButtons" class="flex items-center space-x-5 text-sm">
+            <!-- Populated via home.js -->
+            <div class="w-12 h-4 bg-slate-800/40 animate-pulse rounded"></div>
+        </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="relative z-10 w-full max-w-7xl mx-auto px-6 py-12 lg:py-20 flex flex-col items-center">
+        
+        <!-- Hero Section -->
+        <section class="w-full max-w-3xl text-center flex flex-col items-center space-y-6">
+            <div class="px-3 py-1 bg-sky-500/10 border border-sky-500/20 rounded-full text-sky-400 text-xs font-mono tracking-wide uppercase inline-flex items-center space-x-1.5 animate-fade-in">
+                <span>⚡ PRODUCTIVITY EVOLVED</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
+            </div>
+            
+            <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] text-slate-100">
+                A Beautifully Crafted <br>
+                <span class="bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">Intelligent Workspace</span>
+            </h1>
+            
+            <p class="text-slate-400 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+                Organize your goals, tasks, and daily schedules alongside state-of-the-art administrative guardrails and Gemini-reinforced productivity insights.
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full sm:w-auto">
+                <a href="/signup" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-slate-950 font-semibold rounded-xl text-center tracking-tight shadow-xl shadow-sky-500/10 hover:shadow-sky-500/20 hover:scale-[1.01] transition duration-200">
+                    Get Started Free
+                </a>
+                <a href="/login" class="w-full sm:w-auto px-8 py-3.5 bg-slate-800/60 hover:bg-slate-800 text-slate-200 hover:text-slate-50 border border-slate-700/50 rounded-xl text-center font-medium transition duration-200">
+                    Sign In
+                </a>
+            </div>
+        </section>
+
+        <!-- Feature Showcases -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl mt-20 lg:mt-32">
+            
+            <!-- Feature 1 -->
+            <div class="p-6 rounded-2xl glass-card flex flex-col space-y-4">
+                <div class="w-11 h-11 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center border border-sky-500/20">
+                    <i data-lucide="check-square" class="w-5 h-5"></i>
+                </div>
+                <h3 class="font-display font-semibold text-lg text-slate-100">Interactive Task Portal</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    Full CRUD capabilities for compiling, structuring, and toggling daily checklists categorized dynamically by priorities.
+                </p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="p-6 rounded-2xl glass-card flex flex-col space-y-4">
+                <div class="w-11 h-11 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                    <i data-lucide="camera" class="w-5 h-5"></i>
+                </div>
+                <h3 class="font-display font-semibold text-lg text-slate-100">Smart OCR Scanner</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    Instantly extract checkboxes and paper guidelines from handwritten screenshots and notes directly into structured checklist modules.
+                </p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="p-6 rounded-2xl glass-card flex flex-col space-y-4">
+                <div class="w-11 h-11 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center border border-violet-500/20">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                </div>
+                <h3 class="font-display font-semibold text-lg text-slate-100">AI Productivity Coach</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    Harness Gemini's analytical powers to parse your active workloads and suggest smart recommendations on time block management.
+                </p>
+            </div>
+
+        </section>
+        
+    </main>
+
+    <!-- Footer Area -->
+    <footer class="relative z-10 w-full max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between border-t border-slate-900/40 text-xs text-slate-500 mt-20">
+        <div>&copy; 10006 Bloom Workspace Solutions. Operating with highest secure threshold.</div>
+        <div class="flex items-center space-x-4 mt-4 md:mt-0 font-mono">
+            <span>FastAPI Backend</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-800"></span>
+            <span>Local SQLite Directory</span>
+        </div>
+    </footer>
+
+    <!-- Init Lucide Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/home.js"></script>
+
+</body>
+</html>

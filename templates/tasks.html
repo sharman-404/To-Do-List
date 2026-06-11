@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Tasks - Bloom AI</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sky: {
+                            200: "#cfd89a", 300: "#b5c46a", 400: "#9aad3d",
+                            500: "#7d8f28", 950: "#111504"
+                        },
+                        indigo: {
+                            300: "#c8a472", 400: "#b08348",
+                            500: "#8f6530", 950: "#130d04"
+                        },
+                        violet: {
+                            400: "#b08348", 500: "#8f6530"
+                        },
+                        slate: {
+                            50: "#faf8f3", 100: "#f0ebe0", 200: "#ddd4c2",
+                            300: "#c4b89a", 400: "#a89870", 500: "#8a7a58",
+                            600: "#6e6040", 700: "#524830", 800: "#3a3222",
+                            850: "#2e2819", 900: "#231e12", 950: "#17120a"
+                        },
+                        amber: {
+                            300: "#e8c97a", 400: "#c9a03e", 500: "#a07a28",
+                            900: "#2a1f08", 950: "#1a1305"
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Lucide Library for Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="selection:bg-sky-500/30 selection:text-sky-200 bg-slate-950 text-slate-100 min-h-screen font-sans flex overflow-x-hidden">
+
+    <!-- Sidebar Menu (Large screens) -->
+    <aside class="hidden md:flex flex-col w-64 border-r border-slate-900/50 bg-slate-950 p-6 shrink-0 z-20 relative">
+        <div class="flex items-center space-x-3 mb-8">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center font-bold font-display text-slate-950 text-sm shadow shadow-sky-500/20">B</div>
+            <span class="font-display font-bold text-lg tracking-wide bg-gradient-to-r from-slate-100 to-sky-400 bg-clip-text text-transparent">Bloom Hub</span>
+        </div>
+
+        <nav class="flex-1 space-y-1.5 text-sm">
+            <a href="/dashboard" class="flex items-center space-x-3 px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-900/40 rounded-xl font-medium transition">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/tasks" class="flex items-center space-x-3 px-4 py-3 bg-sky-500/10 text-sky-400 hover:text-sky-300 rounded-xl font-medium transition">
+                <i data-lucide="check-square" class="w-4 h-4"></i>
+                <span>Manage Tasks</span>
+            </a>
+            <a id="adminTabLink" href="/admin" class="hidden flex items-center space-x-3 px-4 py-3 text-amber-500/80 hover:text-amber-400 hover:bg-amber-950/10 rounded-xl font-medium border border-transparent hover:border-amber-900/20 transition">
+                <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                <span>Admin Console</span>
+            </a>
+        </nav>
+
+        <div class="pt-6 border-t border-slate-900/40">
+            <button id="logoutBtn" class="w-full flex items-center space-x-3 px-4 py-3 text-rose-400 hover:text-rose-300 hover:bg-rose-955/10 rounded-xl font-medium border border-transparent hover:border-rose-900/20 transition text-sm">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Working Canvas -->
+    <div class="flex-1 min-w-0 flex flex-col min-h-screen relative">
+
+        <!-- Background Ambient Glows -->
+        <div class="ambient-glow top-0 right-0 translate-x-[20%] -translate-y-[20%] opacity-40"></div>
+        <div class="ambient-glow bottom-0 left-1/3 -translate-y-[20%] opacity-30"></div>
+
+        <!-- Mobile Navigation Menu Header -->
+        <header class="md:hidden flex items-center justify-between px-6 py-4 border-b border-slate-900/40 bg-slate-950 relative z-20">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 rounded bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center font-bold text-slate-950 text-xs">B</div>
+                <span class="font-display font-bold text-base tracking-wide text-slate-100">Bloom</span>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <a href="/dashboard" class="text-xs font-medium text-slate-400 hover:text-slate-200">Dashboard</a>
+                <a id="adminTabMobile" href="/admin" style="display:none;" class="text-xs font-medium text-amber-400">Admin</a>
+                <button id="logoutBtnMobile" class="text-xs font-medium text-rose-400">Sign Out</button>
+            </div>
+        </header>
+
+        <!-- Primary Workspace Contents -->
+        <main class="flex-1 overflow-y-auto px-6 py-8 relative z-10 w-full max-w-6xl mx-auto">
+
+            <!-- Title -->
+            <section class="pb-6 border-b border-slate-900/40 mb-8">
+                <h2 class="font-display text-2xl sm:text-3xl font-bold tracking-tight text-slate-100">
+                    Productivity Checklist Hub
+                </h2>
+                <p class="text-slate-400 text-sm mt-1">Capture, structure, filters, and use Gemini OCR scanning to import raw text notes.</p>
+            </section>
+
+            <!-- Column Split -->
+            <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                <!-- Left Hand Section: Insertion Form & OCR Scanner -->
+                <div class="lg:col-span-4 space-y-6">
+
+                    <!-- Manual Add Section -->
+                    <div class="p-6 rounded-2xl glass-panel">
+                        <h4 class="font-display font-bold text-sm text-slate-100 flex items-center space-x-2 mb-4">
+                            <i data-lucide="plus-circle" class="w-4 h-4 text-sky-400"></i>
+                            <span>Add Goal Checklist</span>
+                        </h4>
+                        <p class="text-[10px] text-slate-500 font-mono mb-4 leading-relaxed">Priority is AI-assigned. Category is set here and <span class="text-amber-400/70">locked after creation</span> — only an admin can change them.</p>
+
+                        <form id="taskForm" class="space-y-4">
+                            <div>
+                                <label for="taskTitle" class="block text-3xs uppercase tracking-wider font-semibold font-mono text-slate-400 mb-1.5">Task Title</label>
+                                <input type="text" id="taskTitle" required class="w-full px-4 py-2.5 rounded-xl glass-input text-sm" placeholder="e.g. Slide strategy presentation">
+                            </div>
+
+                            <div>
+                                <label for="taskDesc" class="block text-3xs uppercase tracking-wider font-semibold font-mono text-slate-400 mb-1.5">Supplemental Details</label>
+                                <textarea id="taskDesc" rows="2" class="w-full px-4 py-2.5 rounded-xl glass-input text-sm" placeholder="Optional background context..."></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="taskCategory" class="block text-3xs uppercase tracking-wider font-semibold font-mono text-slate-400 mb-1.5">Category</label>
+                                    <select id="taskCategory" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs">
+                                        <option value="work">Work</option>
+                                        <option value="personal">Personal</option>
+                                        <option value="learning">Learning</option>
+                                        <option value="health">Health</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                
+                            </div>
+
+                            <div>
+                                <label for="taskDueDate" class="block text-3xs uppercase tracking-wider font-semibold font-mono text-slate-400 mb-1.5">Target Deadline</label>
+                                <input type="date" id="taskDueDate" class="w-full px-4 py-2.5 rounded-xl glass-input text-xs">
+                            </div>
+
+                            <button type="submit" class="w-full py-3 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs tracking-wide uppercase rounded-xl transition duration-200">
+                                Create Goal
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Gemini AI OCR Screen/Note Uploader -->
+                    <div class="p-6 rounded-2xl glass-panel relative overflow-hidden border border-dashed border-slate-800">
+                        <div class="absolute top-0 right-0 w-20 h-20 bg-indigo-500/5 rounded-bl-full filter blur-sm"></div>
+
+                        <h4 class="font-display font-bold text-sm text-slate-100 flex items-center space-x-2 mb-1">
+                            <i data-lucide="scan-line" class="w-4 h-4 text-indigo-400"></i>
+                            <span>Gemini OCR Task Extractor</span>
+                        </h4>
+                        <p class="text-3xs text-slate-400 mb-4 font-mono">DRAG & DROP CHECKLIST SCREENSHOTS OR NOTES</p>
+
+                        <!-- Invisible File Field -->
+                        <input type="file" id="ocrFileInput" accept="image/*" class="hidden">
+
+                        <!-- Drag Target area -->
+                        <div id="ocrDropzone" class="p-8 border border-dashed border-slate-800 rounded-xl text-center bg-slate-900/10 hover:bg-slate-900/20 hover:border-sky-500/40 cursor-pointer transition flex flex-col items-center justify-center space-y-2">
+                            <i data-lucide="cloud-lightning" class="w-6 h-6 text-indigo-400"></i>
+                            <p class="text-xs font-semibold text-slate-300">Select or drop file</p>
+                            <p class="text-3xs text-slate-500 font-mono">PNG / JPEG / JPG formats max 9MB</p>
+                        </div>
+
+                        <!-- Parsing State Loader -->
+                        <div id="ocrScanningLoader" class="hidden p-8 text-center flex flex-col items-center justify-center space-y-3">
+                            <div class="w-6 h-6 border-2 border-indigo-400/25 border-t-indigo-400 rounded-full animate-spin"></div>
+                            <p class="text-xs text-indigo-300 font-mono animate-pulse tracking-widest">GEMINI OCR MODEL READING PIXEL ARRAYS...</p>
+                        </div>
+
+                        <!-- Parsing Results Panel -->
+                        <div id="ocrResultsPanel" class="hidden space-y-3 pt-2">
+                            <div class="p-2 border border-indigo-500/10 bg-indigo-950/15 rounded-lg text-3xs text-indigo-300 font-mono italic max-h-20 overflow-y-auto" id="ocrExtractedTextSummary">
+                                Raw extracted text details.
+                            </div>
+
+                            <h5 class="text-2xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Extracted Action Items ({idx})</h5>
+
+                            <div id="ocrTasksList" class="space-y-2 max-h-48 overflow-y-auto scrollbar-thin">
+                                <!-- Populated dynamically -->
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 pt-2">
+                                <button id="cancelOcrBtn" class="py-2 border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-400 text-xs rounded-xl font-semibold transition">Cancel</button>
+                                <button id="importOcrBtn" class="py-2 bg-indigo-500 hover:bg-indigo-400 text-slate-950 text-xs rounded-xl font-bold transition">Import Tasks</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Hand Column: Checklist Registers -->
+                <div class="lg:col-span-8 space-y-4">
+
+                    <!-- Search and filters toolbar -->
+                    <div class="p-4 bg-slate-900/30 border border-slate-900 rounded-2xl flex flex-col sm:flex-row items-center gap-4">
+                        <div class="relative w-full sm:flex-1">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                            <input type="text" id="searchTask" class="w-full pl-9 pr-4 py-2 rounded-xl glass-input text-xs" placeholder="Filter active lists by titles or details...">
+                        </div>
+
+                        <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                            <!-- Category Filter -->
+                            <select id="categoryFilter" class="w-1/3 sm:w-auto px-2 py-2 rounded-xl glass-input text-3xs uppercase font-mono font-bold tracking-wide">
+                                <option value="all" selected>All Categories</option>
+                                <option value="work">Work</option>
+                                <option value="personal">Personal</option>
+                                <option value="learning">Learning</option>
+                                <option value="health">Health</option>
+                                <option value="other">Other</option>
+                            </select>
+
+                            <!-- Priority Filter -->
+                            <select id="priorityFilter" class="w-1/3 sm:w-auto px-2 py-2 rounded-xl glass-input text-3xs uppercase font-mono font-bold tracking-wide">
+                                <option value="all" selected>All Priorities</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+
+                            <!-- Status Filter -->
+                            <select id="statusFilter" class="w-1/3 sm:w-auto px-2 py-2 rounded-xl glass-input text-3xs uppercase font-mono font-bold tracking-wide">
+                                <option value="all" selected>All States</option>
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tasks Table Matrix -->
+                    <div class="rounded-2xl glass-panel overflow-hidden border border-slate-900/40">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-900/60 text-slate-400 font-mono text-3xs uppercase tracking-widest bg-slate-950/40 select-none">
+                                        <th class="p-4 w-10">Done</th>
+                                        <th class="p-4">Task Context & Title</th>
+                                        <th class="p-4 w-28">Category</th>
+                                        <th class="p-4 w-24">Priority</th>
+                                        <th class="p-4 w-28">Target Date</th>
+                                        <th class="p-4 w-12 text-right"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tasksTableBody">
+                                    <!-- Populated via tasks.js -->
+                                    <tr>
+                                        <td colspan="6" class="p-8 text-center text-sm text-slate-400">
+                                            Synchronizing workspace checklists...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Init Lucide Icons -->
+    <script>
+        lucide.createIcons();
+
+        // Handlers for mobile logout buttons
+        document.getElementById("logoutBtnMobile")?.addEventListener("click", () => {
+            localStorage.clear();
+            window.location.href = "/";
+        });
+    </script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/tasks.js"></script>
+
+</body>
+</html>

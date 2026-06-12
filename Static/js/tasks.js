@@ -22,8 +22,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     const ocrTasksList = document.getElementById("ocrTasksList");
     const importOcrBtn = document.getElementById("importOcrBtn");
     const cancelOcrBtn = document.getElementById("cancelOcrBtn");
+    // Sidebar admin links
+    const adminTabLink = document.getElementById("adminTabLink");
+    const adminTabMobile = document.getElementById("adminTabMobile");
     let allTasksList = [];
     let ocrParsedPendingTasks = [];
+
+    // Reveal admin sidebar links if current user is admin
+    async function initAdminNav() {
+        try {
+            const profile = await apiFetch("/api/me");
+            if (profile && profile.role === "admin") {
+                if (adminTabLink) adminTabLink.classList.remove("hidden");
+                if (adminTabMobile) adminTabMobile.style.display = "block";
+            }
+        } catch (e) {
+            // silently ignore — non-critical
+        }
+    }
  
     // Load active checklists
     async function loadCheckedTasks() {
@@ -170,11 +186,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             suggestPriorityBtn.textContent = "Analyzing...";
             try {
                 const desc = document.getElementById("taskDesc")?.value || null;
-                const category = document.getElementById("taskCategory")?.value || "work";
                 const dueDate = document.getElementById("taskDueDate")?.value || null;
                 const result = await apiFetch("/api/ai/suggest-priority", {
                     method: "POST",
-                    body: JSON.stringify({ title, description: desc, category, due_date: dueDate })
+                    body: JSON.stringify({ title, description: desc, due_date: dueDate })
                 });
  
                 if (result && result.priority) {
@@ -208,27 +223,30 @@ document.addEventListener("DOMContentLoaded", async () => {
             e.preventDefault();
             const submitBtn = taskForm.querySelector("button[type='submit']");
             submitBtn.disabled = true;
-            submitBtn.textContent = "🤖 AI is setting priority...";
+            submitBtn.textContent = "🤖 AI is classifying task...";
             const title = document.getElementById("taskTitle").value;
             const description = document.getElementById("taskDesc").value;
-            const category = document.getElementById("taskCategory").value;
             const due_date = document.getElementById("taskDueDate").value || null;
 
             try {
-                // Always let AI decide priority — user never sets it manually
+                // Always let AI decide both priority and category
                 let priority = "medium"; // fallback
+                let category = "work";   // fallback
                 try {
                     const aiResult = await apiFetch("/api/ai/suggest-priority", {
                         method: "POST",
-                        body: JSON.stringify({ title, description, category, due_date })
+                        body: JSON.stringify({ title, description, due_date })
                     });
                     if (aiResult && aiResult.priority) {
                         priority = aiResult.priority;
                     }
+                    if (aiResult && aiResult.category) {
+                        category = aiResult.category;
+                    }
                 } catch (aiErr) {
                         submitBtn.disabled = false;
-                        submitBtn.textContent = "Add Task";
-                        alert("Could not assign AI priority: " + aiErr.message + "\nPlease try again in a moment.");
+                        submitBtn.textContent = "Create Goal";
+                        alert("Could not assign AI priority/category: " + aiErr.message + "\nPlease try again in a moment.");
                         return;
                     }
 
@@ -249,12 +267,177 @@ document.addEventListener("DOMContentLoaded", async () => {
             alert("Creation failure: " + err.message);
         } finally {
             submitBtn.disabled = false;
-            submitBtn.textContent = "Add Task";
+            submitBtn.textContent = "Create Goal";
         }
     });
 }
  
-    // Connect real-time filters
+    // Sidebar collapsible toggles
+    function setupSidebarCollapsible(toggleId, dropdownId, chevronId) {
+        const toggle = document.getElementById(toggleId);
+        const dropdown = document.getElementById(dropdownId);
+        const chevron = document.getElementById(chevronId);
+        if (!toggle || !dropdown) return;
+        toggle.addEventListener("click", () => {
+            const isOpen = !dropdown.classList.contains("hidden");
+            dropdown.classList.toggle("hidden", isOpen);
+            if (chevron) chevron.style.transform = isOpen ? "" : "rotate(180deg)";
+        });
+    }
+    setupSidebarCollapsible("navPriorityToggle", "navPriorityDropdown", "navPriorityChevron");
+    setupSidebarCollapsible("navCategoryToggle", "navCategoryDropdown", "navCategoryChevron");
+    setupSidebarCollapsible("navStatusToggle",   "navStatusDropdown",   "navStatusChevron");
+
+    // Filtered view elements
+    const mainContent = document.getElementById("mainContent");
+    const filteredViewPanel = document.getElementById("filteredViewPanel");
+    const filteredViewTitle = document.getElementById("filteredViewTitle");
+    const filteredViewSubtitle = document.getElementById("filteredViewSubtitle");
+    const filteredTasksTableBody = document.getElementById("filteredTasksTableBody");
+    const clearFilterBtn = document.getElementById("clearFilterBtn");
+
+    function showMainContent() {
+        if (mainContent) mainContent.classList.remove("hidden");
+        if (filteredViewPanel) filteredViewPanel.classList.add("hidden");
+        // Clear active state from all nav filter buttons
+        document.querySelectorAll(".nav-filter-btn").forEach(b => b.classList.remove("bg-slate-800/60", "text-slate-100"));
+    }
+
+    function renderFilteredTasks(tasks) {
+        if (!filteredTasksTableBody) return;
+        if (tasks.length === 0) {
+            filteredTasksTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="p-8 text-center text-sm text-slate-400">
+                        No tasks match this filter.
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        const adminOnlyTitle = `title="Priority and category can only be changed by an admin"`;
+        filteredTasksTableBody.innerHTML = tasks.map(item => {
+            const dateDisplay = item.due_date
+                ? new Date(item.due_date).toLocaleDateString(undefined, {month: "short", day: "numeric"})
+                : '<span class="text-slate-600">-</span>';
+            const checkboxChecked = item.completed ? "checked" : "";
+            const textLineDecoration = item.completed ? "line-through text-slate-500" : "text-slate-100";
+            const descStyle = item.completed ? "text-slate-600" : "text-slate-400";
+            const priorityBadgeColor = {
+                high:   "bg-rose-500/10 text-rose-400 border-rose-500/20",
+                medium: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+                low:    "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+            }[item.priority] || "bg-slate-500/10 text-slate-400";
+            const catLabel = {
+                work: "💼 Work", personal: "👤 Personal", learning: "📚 Learning",
+                health: "❤️ Health", other: "✨ Other"
+            }[item.category] || `📌 ${item.category}`;
+            const aiBadge = item.ai_generated
+                ? `<span class="mx-1.5 shrink-0 px-1.5 py-0.5 rounded ai-badge text-[9px] font-mono tracking-widest font-bold uppercase">AI</span>`
+                : "";
+            return `
+                <tr class="border-b border-slate-900/30 hover:bg-slate-900/10 transition-all text-sm group">
+                    <td class="p-4 w-10 shrink-0">
+                        <input type="checkbox" ${checkboxChecked} data-todo-id="${item.id}" class="filtered-checkbox checkbox-anim w-4.5 h-4.5 rounded border-slate-700 bg-slate-900 focus:ring-0 cursor-pointer">
+                    </td>
+                    <td class="p-4">
+                        <div class="flex items-center">
+                            <span class="font-medium ${textLineDecoration}">${item.title}</span>
+                            ${aiBadge}
+                        </div>
+                        ${item.description ? `<p class="text-xs ${descStyle} mt-0.5 max-w-lg truncate">${item.description}</p>` : ""}
+                    </td>
+                    <td class="p-4"><span ${adminOnlyTitle} class="px-2 py-0.5 text-2xs uppercase tracking-wide font-mono font-medium rounded-lg text-slate-300 bg-slate-900/40 border border-slate-800 cursor-default select-none">${catLabel} <span class="opacity-40 text-[9px]">🔒</span></span></td>
+                    <td class="p-4"><span ${adminOnlyTitle} class="px-2 py-0.5 text-2xs uppercase tracking-wide font-mono rounded ${priorityBadgeColor} cursor-default select-none">${item.priority} <span class="opacity-40 text-[9px]">🔒</span></span></td>
+                    <td class="p-4 font-mono text-xs text-slate-400">${dateDisplay}</td>
+                    <td class="p-4 text-right">
+                        <button data-todo-id="${item.id}" class="filtered-delete-btn p-1.5 rounded-lg border border-transparent hover:border-rose-900/30 bg-transparent hover:bg-rose-955/20 text-slate-500 hover:text-rose-400 opacity-80 group-hover:opacity-100 transition">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>`;
+        }).join("");
+
+        lucide.createIcons();
+
+        filteredTasksTableBody.querySelectorAll(".filtered-checkbox").forEach(chk => {
+            chk.addEventListener("change", async () => {
+                const todoId = chk.getAttribute("data-todo-id");
+                try {
+                    await apiFetch(`/api/todos/${todoId}/toggle`, { method: "PUT" });
+                    await loadCheckedTasks();
+                    // Re-apply current filter after reload
+                    const activeBtn = document.querySelector(".nav-filter-btn.bg-slate-800\\/60");
+                    if (activeBtn) activeBtn.click();
+                } catch (e) {
+                    chk.checked = !chk.checked;
+                }
+            });
+        });
+
+        filteredTasksTableBody.querySelectorAll(".filtered-delete-btn").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const todoId = btn.getAttribute("data-todo-id");
+                if (confirm("Delete this task?")) {
+                    try {
+                        await apiFetch(`/api/todos/${todoId}`, { method: "DELETE" });
+                        await loadCheckedTasks();
+                        const activeBtn = document.querySelector(".nav-filter-btn.bg-slate-800\\/60");
+                        if (activeBtn) activeBtn.click();
+                    } catch (e) {
+                        alert("Failed to delete: " + e.message);
+                    }
+                }
+            });
+        });
+    }
+
+    // Wire up all sidebar filter buttons
+    document.querySelectorAll(".nav-filter-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const type = btn.getAttribute("data-filter-type");
+            const value = btn.getAttribute("data-filter-value");
+
+            // Highlight active button
+            document.querySelectorAll(".nav-filter-btn").forEach(b => b.classList.remove("bg-slate-800/60", "text-slate-100"));
+            btn.classList.add("bg-slate-800/60", "text-slate-100");
+
+            // Hide main content, show filtered panel
+            if (mainContent) mainContent.classList.add("hidden");
+            if (filteredViewPanel) filteredViewPanel.classList.remove("hidden");
+
+            // Title labels
+            const titleMap = {
+                priority: { high: "⬆ High Priority Tasks", medium: "➡ Medium Priority Tasks", low: "⬇ Low Priority Tasks" },
+                category: { work: "💼 Work Tasks", personal: "👤 Personal Tasks", learning: "📚 Learning Tasks", health: "❤️ Health Tasks", other: "✨ Other Tasks" },
+                status:   { pending: "🕐 Pending Tasks", completed: "✅ Completed Tasks" }
+            };
+            const subtitleMap = {
+                priority: "Filtered by priority level",
+                category: "Filtered by category",
+                status:   "Filtered by completion status"
+            };
+
+            if (filteredViewTitle) filteredViewTitle.textContent = titleMap[type]?.[value] || value;
+            if (filteredViewSubtitle) filteredViewSubtitle.textContent = subtitleMap[type] || "";
+
+            // Filter tasks
+            let filtered = allTasksList;
+            if (type === "priority") filtered = allTasksList.filter(t => t.priority === value);
+            else if (type === "category") filtered = allTasksList.filter(t => t.category === value);
+            else if (type === "status") filtered = allTasksList.filter(t => value === "completed" ? t.completed : !t.completed);
+
+            renderFilteredTasks(filtered);
+        });
+    });
+
+    if (clearFilterBtn) {
+        clearFilterBtn.addEventListener("click", () => {
+            showMainContent();
+        });
+    }
+
+    // Connect real-time filters (toolbar dropdowns)
     searchTaskInput?.addEventListener("input", renderCheckedTasks);
     categoryFilterSelect?.addEventListener("change", renderCheckedTasks);
     priorityFilterSelect?.addEventListener("change", renderCheckedTasks);
@@ -433,5 +616,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
  
     // Initialize
+    await initAdminNav();
     await loadCheckedTasks();
 });

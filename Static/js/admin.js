@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", async () => {
+
     // Guard check
     requireAdminSession();
+
     const usersTableBody = document.getElementById("usersTableBody");
     const adminStatsTotal = document.getElementById("adminStatsTotal");
     const adminStatsApproved = document.getElementById("adminStatsApproved");
@@ -9,9 +11,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const restoreAdminBtn = document.getElementById("restoreAdminBtn");
     const diagnosticFeedback = document.getElementById("diagnosticFeedback");
     const feedbackText = document.getElementById("feedbackText");
+
     // Task override panel elements
     const tasksOverrideTableBody = document.getElementById("tasksOverrideTableBody");
     const taskUserFilterSelect = document.getElementById("taskUserFilter");
+
     let registeredUsers = [];
     let allAdminTodos = [];
  
@@ -23,11 +27,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             "bg-emerald-950/20", "border-emerald-500/20", "text-emerald-300",
             "bg-rose-950/20", "border-rose-500/20", "text-rose-300"
         );
+
         if (type === "success") {
             diagnosticFeedback.classList.add("bg-emerald-950/20", "border-emerald-500/20", "text-emerald-300");
-        } else {
+        }
+        
+        else {
             diagnosticFeedback.classList.add("bg-rose-950/20", "border-rose-500/20", "text-rose-300");
         }
+
         setTimeout(() => diagnosticFeedback.classList.add("hidden"), 10000);
     }
  
@@ -43,7 +51,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (adminStatsTotal) adminStatsTotal.textContent = total;
             if (adminStatsApproved) adminStatsApproved.textContent = approved;
             if (adminStatsPending) adminStatsPending.textContent = pending;
-        } catch (e) {
+        }
+        
+        catch (e) {
             console.error(e);
             showDiagnosticFeedback("Failed to synchronize administrative table registers.", "error");
         }
@@ -72,17 +82,22 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (user.blocked) {
                 statusBadge = `<span class="px-2 py-0.5 border border-rose-900/30 bg-rose-950/20 text-rose-300 text-2xs rounded-lg uppercase tracking-wider font-mono">Blocked</span>`;
                 actionsHtml = `<button data-user-id="${user.id}" data-action="unblock" class="px-2.5 py-1 text-xs bg-slate-800 hover:bg-slate-700 hover:text-slate-100 text-slate-300 rounded border border-slate-700 transition">Unblock</button>`;
-            } else if (!user.approved) {
+            }
+
+            else if (!user.approved) {
                 statusBadge = `<span class="px-2 py-0.5 border border-amber-900/30 bg-amber-950/20 text-amber-300 text-2xs rounded-lg uppercase tracking-wider font-mono">Pending</span>`;
                 actionsHtml = `
                     <button data-user-id="${user.id}" data-action="approve" class="px-2.5 py-1 text-xs bg-sky-500 hover:bg-sky-400 text-slate-950 font-medium rounded transition mr-1 shadow shadow-sky-500/10">Approve</button>
                     <button data-user-id="${user.id}" data-action="block" class="px-2.5 py-1 text-xs bg-rose-950/20 hover:bg-rose-950/40 text-rose-300 rounded border border-rose-900/30 transition">Block</button>`;
-            } else {
+            }
+
+            else {
                 statusBadge = `<span class="px-2 py-0.5 border border-emerald-900/30 bg-emerald-950/20 text-emerald-300 text-2xs rounded-lg uppercase tracking-wider font-mono">Approved</span>`;
                 actionsHtml = user.role !== "admin"
                     ? `<button data-user-id="${user.id}" data-action="block" class="px-2.5 py-1 text-xs bg-rose-950/20 hover:bg-rose-950/40 text-rose-300 rounded border border-rose-900/30 transition">Block</button>`
                     : `<span class="text-xs text-slate-500 italic">Protected</span>`;
             }
+
             return `
                 <tr class="border-b border-slate-800/40 hover:bg-slate-900/20 text-sm">
                     <td class="p-4 font-semibold text-slate-200">${user.username}</td>
@@ -105,7 +120,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     await apiFetch(ep, { method: "PUT" });
                     showDiagnosticFeedback(`Successfully executed [${action}] on user.`, "success");
                     await loadAdminDataAll();
-                } catch (err) {
+                }
+                catch (err) {
                     showDiagnosticFeedback(err.message || `Failed executing [${action}].`, "error");
                     btn.disabled = false;
                 }
@@ -120,7 +136,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             allAdminTodos = await apiFetch("/api/admin/todos");
             populateUserFilter();
             renderTasksOverrideTable(allAdminTodos);
-        } catch (e) {
+        }
+        catch (e) {
             console.error("Failed to load tasks for override:", e);
             showDiagnosticFeedback("Failed to load task override panel.", "error");
         }
@@ -144,6 +161,7 @@ document.addEventListener("DOMContentLoaded", async () => {
  
     function renderTasksOverrideTable(todos) {
         if (!tasksOverrideTableBody) return;
+
         if (todos.length === 0) {
             tasksOverrideTableBody.innerHTML = `
                 <tr>
@@ -171,8 +189,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         tasksOverrideTableBody.innerHTML = todos.map(task => {
             const owner = registeredUsers.find(u => u.id === task.user_id);
             const ownerLabel = owner ? owner.username : `#${task.user_id}`;
+
             const prColor  = priorityBadgeColor[task.priority] || "bg-slate-500/10 text-slate-400 border-slate-700";
             const catColor = categoryBadgeColor[task.category] || "bg-slate-500/10 text-slate-400 border-slate-700";
+
             const titleStyle = task.completed ? "line-through text-slate-500" : "text-slate-200";
             const icon = categoryIcon[task.category] || "📌";
             return `
@@ -251,6 +271,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         medium: "bg-amber-500/10 text-amber-400 border-amber-500/20",
                         low:    "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                     };
+
                     prBadge.className = `px-2 py-0.5 text-2xs uppercase tracking-wide font-mono rounded border current-priority-badge ${prColors[newPriority]}`;
                     prBadge.textContent = newPriority;
  
@@ -263,6 +284,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         health:   "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
                         other:    "bg-slate-500/10 text-slate-400 border-slate-700"
                     };
+
                     const catIcons = { work: "💼", personal: "👤", learning: "📚", health: "❤️", other: "✨" };
                     catBadge.className = `px-2 py-0.5 text-2xs font-mono rounded border current-category-badge ${catColors[newCategory]}`;
                     catBadge.textContent = `${catIcons[newCategory]} ${newCategory}`;
@@ -272,9 +294,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                     if (cached) { cached.priority = newPriority; cached.category = newCategory; }
  
                     showDiagnosticFeedback(`Task #${taskId} updated → priority: ${newPriority}, category: ${newCategory}.`, "success");
-                } catch (err) {
+                }
+                catch (err) {
                     showDiagnosticFeedback(err.message || "Failed to update task.", "error");
-                } finally {
+                }
+                finally {
                     btn.disabled = false;
                     btn.textContent = "Apply";
                 }
@@ -286,13 +310,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (approveAllBtn) {
         approveAllBtn.addEventListener("click", async () => {
             approveAllBtn.disabled = true;
+
             try {
                 const res = await apiFetch("/approve-all");
                 showDiagnosticFeedback(res.detail || "Successfully completed mass approval.", "success");
                 await loadAdminDataAll();
-            } catch (err) {
+            }
+
+            catch (err){
                 showDiagnosticFeedback(err.message || "Mass approval failed.", "error");
-            } finally {
+            }
+
+            finally {
                 approveAllBtn.disabled = false;
             }
         });
@@ -305,7 +334,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             try {
                 const res = await apiFetch("/reset-admin");
                 showDiagnosticFeedback(res.detail || "Successfully restored admin login.", "success");
-            } catch (err) {
+            }
+            catch (err) {
                 showDiagnosticFeedback(err.message || "Restoration failed.", "error");
             } finally {
                 restoreAdminBtn.disabled = false;
@@ -316,4 +346,184 @@ document.addEventListener("DOMContentLoaded", async () => {
     //  Init 
     await loadAdminDataAll();
     await loadAllTasksForOverride();
+
+    // ── Sidebar collapsible filter nav ──────────────────────────────────────
+    function setupSidebarCollapsible(toggleId, dropdownId, chevronId) {
+        const toggle = document.getElementById(toggleId);
+        const dropdown = document.getElementById(dropdownId);
+        const chevron = document.getElementById(chevronId);
+        if (!toggle || !dropdown) return;
+        toggle.addEventListener("click", () => {
+            const isOpen = !dropdown.classList.contains("hidden");
+            dropdown.classList.toggle("hidden", isOpen);
+            if (chevron) chevron.style.transform = isOpen ? "" : "rotate(180deg)";
+        });
+    }
+    setupSidebarCollapsible("navPriorityToggle", "navPriorityDropdown", "navPriorityChevron");
+    setupSidebarCollapsible("navCategoryToggle", "navCategoryDropdown", "navCategoryChevron");
+    setupSidebarCollapsible("navStatusToggle",   "navStatusDropdown",   "navStatusChevron");
+
+    const adminMainContent        = document.getElementById("adminMainContent");
+    const adminFilteredViewPanel  = document.getElementById("adminFilteredViewPanel");
+    const adminFilteredViewTitle  = document.getElementById("adminFilteredViewTitle");
+    const adminFilteredViewSub    = document.getElementById("adminFilteredViewSubtitle");
+    const adminFilteredTasksBody  = document.getElementById("adminFilteredTasksBody");
+    const adminClearFilterBtn     = document.getElementById("adminClearFilterBtn");
+
+    function showAdminMainContent() {
+        if (adminMainContent) adminMainContent.classList.remove("hidden");
+        if (adminFilteredViewPanel) adminFilteredViewPanel.classList.add("hidden");
+        document.querySelectorAll(".nav-filter-btn").forEach(b => b.classList.remove("bg-slate-800/60", "text-slate-100"));
+    }
+
+    function renderAdminFilteredTasks(todos) {
+        if (!adminFilteredTasksBody) return;
+        if (todos.length === 0) {
+            adminFilteredTasksBody.innerHTML = `
+                <tr><td colspan="6" class="p-8 text-center text-sm text-slate-400">No tasks match this filter.</td></tr>`;
+            return;
+        }
+
+        const priorityBadgeColor = {
+            high:   "bg-rose-500/10 text-rose-400 border-rose-500/20",
+            medium: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+            low:    "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+        };
+        const categoryBadgeColor = {
+            work:     "bg-sky-500/10 text-sky-400 border-sky-500/20",
+            personal: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+            learning: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+            health:   "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+            other:    "bg-slate-500/10 text-slate-400 border-slate-700"
+        };
+        const categoryIcon = { work: "💼", personal: "👤", learning: "📚", health: "❤️", other: "✨" };
+
+        adminFilteredTasksBody.innerHTML = todos.map(task => {
+            const owner = registeredUsers.find(u => u.id === task.user_id);
+            const ownerLabel = owner ? owner.username : `#${task.user_id}`;
+            const prColor  = priorityBadgeColor[task.priority] || "bg-slate-500/10 text-slate-400 border-slate-700";
+            const catColor = categoryBadgeColor[task.category] || "bg-slate-500/10 text-slate-400 border-slate-700";
+            const titleStyle = task.completed ? "line-through text-slate-500" : "text-slate-200";
+            const icon = categoryIcon[task.category] || "📌";
+
+            return `
+            <tr class="border-b border-slate-800/40 hover:bg-slate-900/20 text-sm" data-task-id="${task.id}">
+                <td class="p-4 max-w-[200px]">
+                    <p class="font-medium ${titleStyle} truncate" title="${task.title}">${task.title}</p>
+                    <p class="text-2xs text-slate-500 font-mono mt-0.5">${ownerLabel}</p>
+                </td>
+                <td class="p-4">
+                    <span class="px-2 py-0.5 text-2xs uppercase tracking-wide font-mono rounded border ${prColor} current-priority-badge">${task.priority}</span>
+                </td>
+                <td class="p-4">
+                    <span class="px-2 py-0.5 text-2xs font-mono rounded border ${catColor} current-category-badge">${icon} ${task.category}</span>
+                </td>
+                <td class="p-4">
+                    <select class="priority-override-select glass-input text-xs rounded-lg px-2 py-1.5 border border-slate-700 bg-slate-900/60 text-slate-200 focus:outline-none" data-task-id="${task.id}">
+                        <option value="high"   ${task.priority === "high"   ? "selected" : ""}>⬆ High</option>
+                        <option value="medium" ${task.priority === "medium" ? "selected" : ""}>➡ Medium</option>
+                        <option value="low"    ${task.priority === "low"    ? "selected" : ""}>⬇ Low</option>
+                    </select>
+                </td>
+                <td class="p-4">
+                    <select class="category-override-select glass-input text-xs rounded-lg px-2 py-1.5 border border-slate-700 bg-slate-900/60 text-slate-200 focus:outline-none" data-task-id="${task.id}">
+                        <option value="work"     ${task.category === "work"     ? "selected" : ""}>💼 Work</option>
+                        <option value="personal" ${task.category === "personal" ? "selected" : ""}>👤 Personal</option>
+                        <option value="learning" ${task.category === "learning" ? "selected" : ""}>📚 Learning</option>
+                        <option value="health"   ${task.category === "health"   ? "selected" : ""}>❤️ Health</option>
+                        <option value="other"    ${task.category === "other"    ? "selected" : ""}>✨ Other</option>
+                    </select>
+                </td>
+                <td class="p-4 text-right">
+                    <button data-task-id="${task.id}" class="filtered-apply-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 hover:border-slate-500 text-slate-200 transition">Apply</button>
+                </td>
+            </tr>`;
+        }).join("");
+
+        // Wire Apply buttons
+        adminFilteredTasksBody.querySelectorAll(".filtered-apply-btn").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const taskId = btn.getAttribute("data-task-id");
+                const row = adminFilteredTasksBody.querySelector(`tr[data-task-id="${taskId}"]`);
+                const newPriority = row.querySelector(".priority-override-select").value;
+                const newCategory = row.querySelector(".category-override-select").value;
+                btn.disabled = true;
+                btn.textContent = "Saving...";
+                try {
+                    await apiFetch(`/api/admin/todos/${taskId}/override`, {
+                        method: "PUT",
+                        body: JSON.stringify({ priority: newPriority, category: newCategory })
+                    });
+
+                    const prColors = {
+                        high: "bg-rose-500/10 text-rose-400 border-rose-500/20",
+                        medium: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+                        low: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                    };
+                    const catColors = {
+                        work: "bg-sky-500/10 text-sky-400 border-sky-500/20",
+                        personal: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+                        learning: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+                        health: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+                        other: "bg-slate-500/10 text-slate-400 border-slate-700"
+                    };
+                    const catIcons = { work: "💼", personal: "👤", learning: "📚", health: "❤️", other: "✨" };
+
+                    row.querySelector(".current-priority-badge").className = `px-2 py-0.5 text-2xs uppercase tracking-wide font-mono rounded border current-priority-badge ${prColors[newPriority]}`;
+                    row.querySelector(".current-priority-badge").textContent = newPriority;
+                    row.querySelector(".current-category-badge").className = `px-2 py-0.5 text-2xs font-mono rounded border current-category-badge ${catColors[newCategory]}`;
+                    row.querySelector(".current-category-badge").textContent = `${catIcons[newCategory]} ${newCategory}`;
+
+                    const cached = allAdminTodos.find(t => String(t.id) === taskId);
+                    if (cached) { cached.priority = newPriority; cached.category = newCategory; }
+
+                    showDiagnosticFeedback(`Task #${taskId} updated → priority: ${newPriority}, category: ${newCategory}.`, "success");
+                } catch (err) {
+                    showDiagnosticFeedback(err.message || "Failed to update task.", "error");
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = "Apply";
+                }
+            });
+        });
+    }
+
+    // Wire sidebar filter buttons
+    document.querySelectorAll(".nav-filter-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const type  = btn.getAttribute("data-filter-type");
+            const value = btn.getAttribute("data-filter-value");
+
+            document.querySelectorAll(".nav-filter-btn").forEach(b => b.classList.remove("bg-slate-800/60", "text-slate-100"));
+            btn.classList.add("bg-slate-800/60", "text-slate-100");
+
+            if (adminMainContent) adminMainContent.classList.add("hidden");
+            if (adminFilteredViewPanel) adminFilteredViewPanel.classList.remove("hidden");
+
+            const titleMap = {
+                priority: { high: "⬆ High Priority Tasks", medium: "➡ Medium Priority Tasks", low: "⬇ Low Priority Tasks" },
+                category: { work: "💼 Work Tasks", personal: "👤 Personal Tasks", learning: "📚 Learning Tasks", health: "❤️ Health Tasks", other: "✨ Other Tasks" },
+                status:   { pending: "🕐 Pending Tasks", completed: "✅ Completed Tasks" }
+            };
+            const subtitleMap = {
+                priority: "Click Apply on any row to update priority or category",
+                category: "Click Apply on any row to update priority or category",
+                status:   "Filtered by completion status — use the override panel for edits"
+            };
+
+            if (adminFilteredViewTitle) adminFilteredViewTitle.textContent = titleMap[type]?.[value] || value;
+            if (adminFilteredViewSub)   adminFilteredViewSub.textContent   = subtitleMap[type] || "";
+
+            let filtered = allAdminTodos;
+            if (type === "priority") filtered = allAdminTodos.filter(t => t.priority === value);
+            else if (type === "category") filtered = allAdminTodos.filter(t => t.category === value);
+            else if (type === "status") filtered = allAdminTodos.filter(t => value === "completed" ? t.completed : !t.completed);
+
+            renderAdminFilteredTasks(filtered);
+        });
+    });
+
+    if (adminClearFilterBtn) {
+        adminClearFilterBtn.addEventListener("click", showAdminMainContent);
+    }
 });

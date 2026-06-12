@@ -51,7 +51,7 @@
             <span class="font-display font-bold text-lg tracking-wide bg-gradient-to-r from-slate-100 to-sky-400 bg-clip-text text-transparent">Bloom Hub</span>
         </div>
 
-        <nav class="flex-1 space-y-1.5 text-sm">
+        <nav class="flex-1 space-y-1 text-sm overflow-y-auto">
             <a href="/dashboard" class="flex items-center space-x-3 px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-900/40 rounded-xl font-medium transition">
                 <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
                 <span>Dashboard</span>
@@ -64,6 +64,80 @@
                 <i data-lucide="shield-alert" class="w-4 h-4"></i>
                 <span>Admin Console</span>
             </a>
+
+            <!-- Divider -->
+            <div class="pt-3 pb-1 px-2">
+                <span class="text-3xs font-mono uppercase tracking-widest text-slate-600">Filter By</span>
+            </div>
+
+            <!-- Priority Collapsible -->
+            <div>
+                <button id="navPriorityToggle" class="w-full flex items-center justify-between px-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-900/40 rounded-xl font-medium transition">
+                    <div class="flex items-center space-x-3">
+                        <i data-lucide="flag" class="w-4 h-4"></i>
+                        <span>Priority</span>
+                    </div>
+                    <i data-lucide="chevron-down" id="navPriorityChevron" class="w-3.5 h-3.5 transition-transform duration-200"></i>
+                </button>
+                <div id="navPriorityDropdown" class="hidden pl-4 pr-2 pt-1 pb-1 space-y-0.5">
+                    <button data-filter-type="priority" data-filter-value="high" class="nav-filter-btn w-full flex items-center space-x-2.5 px-3 py-2 text-xs text-slate-400 hover:text-rose-300 hover:bg-rose-950/10 rounded-lg transition">
+                        <span class="w-2 h-2 rounded-full bg-rose-400 shrink-0"></span><span>High</span>
+                    </button>
+                    <button data-filter-type="priority" data-filter-value="medium" class="nav-filter-btn w-full flex items-center space-x-2.5 px-3 py-2 text-xs text-slate-400 hover:text-amber-300 hover:bg-amber-950/10 rounded-lg transition">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span><span>Medium</span>
+                    </button>
+                    <button data-filter-type="priority" data-filter-value="low" class="nav-filter-btn w-full flex items-center space-x-2.5 px-3 py-2 text-xs text-slate-400 hover:text-emerald-300 hover:bg-emerald-950/10 rounded-lg transition">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span><span>Low</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Category Collapsible -->
+            <div>
+                <button id="navCategoryToggle" class="w-full flex items-center justify-between px-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-900/40 rounded-xl font-medium transition">
+                    <div class="flex items-center space-x-3">
+                        <i data-lucide="tag" class="w-4 h-4"></i>
+                        <span>Category</span>
+                    </div>
+                    <i data-lucide="chevron-down" id="navCategoryChevron" class="w-3.5 h-3.5 transition-transform duration-200"></i>
+                </button>
+                <div id="navCategoryDropdown" class="hidden pl-4 pr-2 pt-1 pb-1 space-y-0.5">
+                    <button data-filter-type="category" data-filter-value="work" class="nav-filter-btn w-full flex items-center space-x-2.5 px-3 py-2 text-xs text-slate-400 hover:text-sky-300 hover:bg-sky-950/10 rounded-lg transition">
+                        <span class="shrink-0">💼</span><span>Work</span>
+                    </button>
+                    <button data-filter-type="category" data-filter-value="personal" class="nav-filter-btn w-full flex items-center space-x-2.5 px-3 py-2 text-xs text-slate-400 hover:text-violet-300 hover:bg-violet-950/10 rounded-lg transition">
+                        <span class="shrink-0">👤</span><span>Personal</span>
+                    </button>
+                    <button data-filter-type="category" data-filter-value="learning" class="nav-filter-btn w-full flex items-center space-x-2.5 px-3 py-2 text-xs text-slate-400 hover:text-indigo-300 hover:bg-indigo-950/10 rounded-lg transition">
+                        <span class="shrink-0">📚</span><span>Learning</span>
+                    </button>
+                    <button data-filter-type="category" data-filter-value="health" class="nav-filter-btn w-full flex items-center space-x-2.5 px-3 py-2 text-xs text-slate-400 hover:text-emerald-300 hover:bg-emerald-950/10 rounded-lg transition">
+                        <span class="shrink-0">❤️</span><span>Health</span>
+                    </button>
+                    <button data-filter-type="category" data-filter-value="other" class="nav-filter-btn w-full flex items-center space-x-2.5 px-3 py-2 text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 rounded-lg transition">
+                        <span class="shrink-0">✨</span><span>Other</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status Collapsible -->
+            <div>
+                <button id="navStatusToggle" class="w-full flex items-center justify-between px-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-900/40 rounded-xl font-medium transition">
+                    <div class="flex items-center space-x-3">
+                        <i data-lucide="circle-dot" class="w-4 h-4"></i>
+                        <span>Status</span>
+                    </div>
+                    <i data-lucide="chevron-down" id="navStatusChevron" class="w-3.5 h-3.5 transition-transform duration-200"></i>
+                </button>
+                <div id="navStatusDropdown" class="hidden pl-4 pr-2 pt-1 pb-1 space-y-0.5">
+                    <button data-filter-type="status" data-filter-value="pending" class="nav-filter-btn w-full flex items-center space-x-2.5 px-3 py-2 text-xs text-slate-400 hover:text-amber-300 hover:bg-amber-950/10 rounded-lg transition">
+                        <span class="w-2 h-2 rounded-full border border-amber-400 shrink-0"></span><span>Pending</span>
+                    </button>
+                    <button data-filter-type="status" data-filter-value="completed" class="nav-filter-btn w-full flex items-center space-x-2.5 px-3 py-2 text-xs text-slate-400 hover:text-emerald-300 hover:bg-emerald-950/10 rounded-lg transition">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span><span>Completed</span>
+                    </button>
+                </div>
+            </div>
         </nav>
 
         <div class="pt-6 border-t border-slate-900/40">
@@ -106,6 +180,8 @@
                 <p class="text-slate-400 text-sm mt-1">Capture, structure, filters, and use Gemini OCR scanning to import raw text notes.</p>
             </section>
 
+            <!-- Main Content (hidden when sidebar filter is active) -->
+            <div id="mainContent">
             <!-- Column Split -->
             <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
@@ -118,7 +194,7 @@
                             <i data-lucide="plus-circle" class="w-4 h-4 text-sky-400"></i>
                             <span>Add Goal Checklist</span>
                         </h4>
-                        <p class="text-[10px] text-slate-500 font-mono mb-4 leading-relaxed">Priority is AI-assigned. Category is set here and <span class="text-amber-400/70">locked after creation</span> — only an admin can change them.</p>
+                        <p class="text-[10px] text-slate-500 font-mono mb-4 leading-relaxed">Priority and category are <span class="text-sky-400/70">AI-assigned automatically</span> — only an admin can change them after creation.</p>
 
                         <form id="taskForm" class="space-y-4">
                             <div>
@@ -129,20 +205,6 @@
                             <div>
                                 <label for="taskDesc" class="block text-3xs uppercase tracking-wider font-semibold font-mono text-slate-400 mb-1.5">Supplemental Details</label>
                                 <textarea id="taskDesc" rows="2" class="w-full px-4 py-2.5 rounded-xl glass-input text-sm" placeholder="Optional background context..."></textarea>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label for="taskCategory" class="block text-3xs uppercase tracking-wider font-semibold font-mono text-slate-400 mb-1.5">Category</label>
-                                    <select id="taskCategory" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs">
-                                        <option value="work">Work</option>
-                                        <option value="personal">Personal</option>
-                                        <option value="learning">Learning</option>
-                                        <option value="health">Health</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                </div>
-                                
                             </div>
 
                             <div>
@@ -269,6 +331,41 @@
 
                 </div>
 
+            </section>
+            </div><!-- end #mainContent -->
+
+            <!-- Filtered View Panel (shown when sidebar filter is selected) -->
+            <section id="filteredViewPanel" class="hidden space-y-4">
+                <!-- Header -->
+                <div class="flex items-center justify-between pb-2">
+                    <div>
+                        <h3 id="filteredViewTitle" class="font-display font-bold text-lg text-slate-100"></h3>
+                        <p id="filteredViewSubtitle" class="text-xs text-slate-400 mt-0.5"></p>
+                    </div>
+                    <button id="clearFilterBtn" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs text-slate-400 hover:text-slate-100 bg-slate-900/40 hover:bg-slate-800 border border-slate-800 rounded-xl transition">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        <span>Clear Filter</span>
+                    </button>
+                </div>
+                <!-- Filtered Tasks Table -->
+                <div class="rounded-2xl glass-panel overflow-hidden border border-slate-900/40">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-900/60 text-slate-400 font-mono text-3xs uppercase tracking-widest bg-slate-950/40 select-none">
+                                    <th class="p-4 w-10">Done</th>
+                                    <th class="p-4">Task Context & Title</th>
+                                    <th class="p-4 w-28">Category</th>
+                                    <th class="p-4 w-24">Priority</th>
+                                    <th class="p-4 w-28">Target Date</th>
+                                    <th class="p-4 w-12 text-right"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="filteredTasksTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
 
         </main>

@@ -1,8 +1,4 @@
-import os
-import datetime
-import base64
-import json
-import httpx
+import os, datetime, base64, json, httpx, schemas
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
@@ -13,7 +9,6 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import engine, Base, SessionLocal, get_db
 import models_db as Models
-import schemas
 from auth import hash_password, verify_password, create_access_token, verify_token
 from dotenv import load_dotenv
 
@@ -23,37 +18,31 @@ load_dotenv()
 Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Bloom AI - Todo & User Management", version="1.0.0")
 templates = Jinja2Templates(directory="templates")
- 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AQ.Ab8RN6L3OVPAbMmV8MuDJfrvtem5WAlAbB3kwJwDStBvyQUp8A")
 GEMINI_VISION_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
 @app.get("/", response_class=HTMLResponse)
 def root(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html")
- 
+    return templates.TemplateResponse(request=request, name="index.html") 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
     return templates.TemplateResponse(request=request, name="login.html")
- 
 @app.get("/signup", response_class=HTMLResponse)
 def signup_page(request: Request):
     return templates.TemplateResponse(request=request, name="signup.html")
- 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard_page(request: Request):
     return templates.TemplateResponse(request=request, name="dashboard.html")
- 
 @app.get("/tasks", response_class=HTMLResponse)
 def tasks_page(request: Request):
     return templates.TemplateResponse(request=request, name="tasks.html")
- 
 @app.get("/admin", response_class=HTMLResponse)
 def admin_page(request: Request):
     return templates.TemplateResponse(request=request, name="admin.html")
  
 # Setup auth scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
- 
+
 # Static files & template settings
 if os.path.isdir("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -121,14 +110,11 @@ def signup(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(Models.User).filter(Models.User.username == user_data.username).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username is already registered")
- 
     db_email = db.query(Models.User).filter(Models.User.email == user_data.email).first()
     if db_email:
         raise HTTPException(status_code=400, detail="Email is already registered")
- 
     is_first_user = db.query(Models.User).count() == 0
     hashed = hash_password(user_data.password)
- 
     new_user = Models.User(
         username=user_data.username,
         email=user_data.email,
@@ -147,33 +133,26 @@ def login(user_data: schemas.UserLogin, db: Session = Depends(get_db)):
     user = db.query(Models.User).filter(Models.User.username == user_data.username).first()
     if not user or not verify_password(user_data.password, user.password_hash):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
- 
     if not user.approved:
         raise HTTPException(status_code=403, detail="Your account is pending administrator approval.")
- 
     if user.blocked:
         raise HTTPException(status_code=403, detail="Your account is blocked by administrative settings.")
- 
     access_token = create_access_token(data={"sub": user.username})
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "role": user.role,
         "username": user.username
-    }
- 
+    } 
 @app.post("/api/token", response_model=schemas.TokenResponse)
 def token_login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(Models.User).filter(Models.User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
- 
     if not user.approved:
         raise HTTPException(status_code=403, detail="Your account is pending approval.")
- 
     if user.blocked:
         raise HTTPException(status_code=403, detail="Your account is blocked.")
- 
     access_token = create_access_token(data={"sub": user.username})
     return {
         "access_token": access_token,
@@ -181,11 +160,9 @@ def token_login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         "role": user.role,
         "username": user.username
     }
- 
 @app.get("/api/me", response_model=schemas.UserResponse)
 def read_users_me(current_user: Models.User = Depends(get_current_user)):
     return current_user
- 
 # ── todo endpoints ────────────────────────────────────────────────────────────
 @app.post("/api/todos", response_model=schemas.TodoResponse, status_code=status.HTTP_201_CREATED)
 def create_todo(todo_data: schemas.TodoCreate, current_user: Models.User = Depends(get_current_user),
@@ -216,7 +193,6 @@ def toggle_todo(todo_id: int, current_user: Models.User = Depends(get_current_us
     db_todo = db.query(Models.Todo).filter(Models.Todo.id == todo_id, Models.Todo.user_id == current_user.id).first()
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo item not found")
- 
     db_todo.completed = not db_todo.completed
     db_todo.status = "completed" if db_todo.completed else "pending"
     db.commit()
@@ -229,7 +205,6 @@ def update_todo(todo_id: int, todo_update: schemas.TodoUpdate, current_user: Mod
     db_todo = db.query(Models.Todo).filter(Models.Todo.id == todo_id, Models.Todo.user_id == current_user.id).first()
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo item not found")
- 
     # priority and category are intentionally excluded from TodoUpdate — only admins may change these
     for key, val in todo_update.dict(exclude_unset=True).items():
         if key == "completed" and val is not None:
@@ -237,7 +212,6 @@ def update_todo(todo_id: int, todo_update: schemas.TodoUpdate, current_user: Mod
             db_todo.status = "completed" if val else "pending"
         else:
             setattr(db_todo, key, val)
- 
     db.commit()
     db.refresh(db_todo)
     return db_todo
@@ -247,7 +221,6 @@ def delete_todo(todo_id: int, current_user: Models.User = Depends(get_current_us
     db_todo = db.query(Models.Todo).filter(Models.Todo.id == todo_id, Models.Todo.user_id == current_user.id).first()
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo item not found")
- 
     db.delete(db_todo)
     db.commit()
     return {"detail": "Todo item successfully deleted"}
@@ -373,31 +346,36 @@ class PrioritySuggestRequest(BaseModel):
  
 @app.post("/api/ai/suggest-priority")
 async def suggest_priority(req: PrioritySuggestRequest):
-    """Uses Gemini to suggest a priority level (high/medium/low) for a task."""
+    """Uses Gemini to suggest a priority level (high/medium/low) AND category for a task."""
     if not GEMINI_API_KEY:
-        return {"priority": "medium", "reason": "AI key not configured, defaulting to medium."}
+        return {"priority": "medium", "category": "work", "reason": "AI key not configured, defaulting to medium/work."}
  
     prompt = (
-        f"You are a strict task priority classifier. Analyze the task and assign the correct priority.\n\n"
-        f"RULES:\n"
-        f"- HIGH: urgent, life/health/emergency related, deadline today or tomorrow, critical consequences if missed\n"
+        f"You are a strict task classifier. Analyze the task and assign the correct priority AND category.\n\n"
+        f"PRIORITY RULES:\n"
+        f"- high: urgent, life/health/emergency related, deadline today or tomorrow, critical consequences if missed\n"
         f"  Examples: medical emergencies, urgent deadlines, anything with words like 'urgent', 'emergency', 'ASAP', 'critical', 'blood', 'hospital', 'surgery'\n"
-        f"- MEDIUM: important but not urgent, deadline within a week, professional tasks, scheduled activities\n"
+        f"- medium: important but not urgent, deadline within a week, professional tasks, scheduled activities\n"
         f"  Examples: work meetings, gym sessions, learning tasks, planned errands\n"
-        f"- LOW: optional, leisure, no deadline, recreational, can be skipped without consequence\n"
+        f"- low: optional, leisure, no deadline, recreational, can be skipped without consequence\n"
         f"  Examples: gaming, watching movies, casual hobbies, someday tasks\n\n"
+        f"CATEGORY RULES:\n"
+        f"- work: professional tasks, meetings, projects, deadlines, emails, office-related\n"
+        f"- personal: personal errands, family, social activities, chores, finances\n"
+        f"- learning: studying, courses, books, research, skill-building, tutorials\n"
+        f"- health: exercise, medical appointments, diet, mental wellness, sleep\n"
+        f"- other: anything that does not clearly fit the above categories\n\n"
         f"Task title: {req.title}\n"
         f"Description: {req.description or 'none'}\n"
-        f"Category: {req.category or 'work'}\n"
         f"Due date: {req.due_date or 'not specified'}\n\n"
         f"Respond with ONLY this JSON, no explanation, no markdown:\n"
-        f"{{\"priority\": \"high\", \"reason\": \"one short sentence\"}}"
+        f"{{\"priority\": \"medium\", \"category\": \"work\", \"reason\": \"one short sentence\"}}"
     )
 
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"temperature": 0.0, "maxOutputTokens": 1024, "thinkingConfig": {"thinkingBudget": 0}}
-}
+    }
  
     async with httpx.AsyncClient(timeout=15) as client:
         resp = await client.post(
@@ -419,15 +397,20 @@ async def suggest_priority(req: PrioritySuggestRequest):
         # Strip possible markdown fences
         text = text.replace("```json", "").replace("```", "").strip()
         result = json.loads(text)
+
         priority = result.get("priority", "medium").lower().strip()
-        print(f"[Priority AI] Final priority: {priority}")
-        
         if priority not in ("high", "medium", "low"):
             priority = "medium"
-        return {"priority": priority, "reason": result.get("reason", "")}
+
+        category = result.get("category", "work").lower().strip()
+        if category not in ("work", "personal", "learning", "health", "other"):
+            category = "other"
+
+        print(f"[Priority AI] Final priority: {priority}, category: {category}")
+        return {"priority": priority, "category": category, "reason": result.get("reason", "")}
     except Exception as e:
         print(f"[Priority AI] Parse error: {e}, raw text was: {resp.text[:500]}")
-        return {"priority": "medium", "reason": "Could not parse AI response."}
+        return {"priority": "medium", "category": "work", "reason": "Could not parse AI response."}
  
 # ── NEW: OCR / AI extract endpoint ───────────────────────────────────────────
 class OcrExtractRequest(BaseModel):
@@ -618,4 +601,3 @@ def reset_admin_password_diagnostic(db: Session = Depends(get_db)):
         admin.blocked = False
     db.commit()
     return {"detail": "Admin password successfully reset to 'Admin@123', state set to approved/active."}
- 

@@ -142,7 +142,7 @@
             <!-- Column Blocks -->
             <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <!-- Deadlines column -->
-                <div class="lg:col-span-7 space-y-6">
+                <div class="lg:col-span-12 space-y-6">
                     <div class="p-6 rounded-2xl glass-panel">
                         <h3 class="font-display font-bold text-base text-slate-100 flex items-center space-x-2">
                             <i data-lucide="calendar" class="w-4 h-4 text-sky-400"></i>
@@ -179,37 +179,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- Gemini Coach Column -->
-                <div class="lg:col-span-5">
-                    <div class="p-6 rounded-2xl glass-panel relative overflow-hidden flex flex-col h-full min-h-[420px]">
-                        <!-- Decorative gradient corner -->
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-sky-500/10 rounded-bl-full filter blur-md"></div>
-                        <div class="flex items-center justify-between pb-4 border-b border-slate-900/40">
-                            <div>
-                                <h3 class="font-display font-bold text-base text-slate-100 flex items-center space-x-2">
-                                    <i data-lucide="sparkles" class="w-4 h-4 text-sky-400"></i>
-                                    <span>Gemini Insights Suite</span>
-                                </h3>
-                                <p class="text-3xs text-slate-400 tracking-wide font-mono uppercase mt-0.5">Generative AI Diagnostics Context</p>
-                            </div>
-                            <button id="refreshInsightsBtn" title="Sync Insights" class="p-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-xl text-slate-400 hover:text-sky-400 transition">
-                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </div>
-                        <!-- Panel wrapper where insights are rendered -->
-                        <div id="insightsContainer" class="flex-1 py-4 space-y-4 overflow-y-auto max-h-[400px] scrollbar-thin">
-                            <!-- Populated via dashboard.js -->
-                            <div class="p-8 text-center flex flex-col items-center justify-center space-y-2">
-                                <div class="w-5 h-5 border-2 border-sky-400/20 border-t-sky-400 rounded-full animate-spin"></div>
-                                <p class="text-xs text-slate-500 font-mono">CONSTRUCTING PROMPT REGISTERS...</p>
-                            </div>
-                        </div>
-                        <div class="pt-4 border-t border-slate-900/40 text-[10px] text-slate-500 flex items-center justify-between font-mono">
-                            <span>Status: Fallback-Reinforced API</span>
-                            <span>Model: Gemini 3.5 Flash</span>
-                        </div>
-                    </div>
-                </div>
+
             </section>
         </main>
     </div>

@@ -65,6 +65,28 @@ class TodoResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class CategoryCreate(BaseModel):
+    name: str
+    emoji: Optional[str] = "📌"
+    color: Optional[str] = "slate"
+    description: Optional[str] = None
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    emoji: Optional[str] = None
+    color: Optional[str] = None
+    description: Optional[str] = None
+
+class CategoryResponse(BaseModel):
+    id: int
+    name: str
+    emoji: str
+    color: str
+    description: Optional[str] = None
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
 class DashboardStats(BaseModel):
     total_users: int
     total_tasks: int

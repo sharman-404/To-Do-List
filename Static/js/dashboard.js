@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    requireSession();
+    if (!requireSession()) return;
     const usernameDisplay = document.getElementById("usernameDisplay");
     const userRoleBadge = document.getElementById("userRoleBadge");
     const adminTabLink = document.getElementById("adminTabLink");
@@ -11,8 +11,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const completionProgress = document.getElementById("completionProgress");
     const upcomingTasksList = document.getElementById("upcomingTasksList");
     const calendarGrid = document.getElementById("calendarGrid");
-    const insightsContainer = document.getElementById("insightsContainer");
-    const refreshInsightsBtn = document.getElementById("refreshInsightsBtn");
     let activeTodos = [];
     let currentProfile = null;
 
@@ -58,8 +56,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderUpcomingList();
             renderCalendarVisual();
 
-            // Auto-load AI insights on load
-            triggerGenAIInsights();
+
         } catch (e) {
             console.error("Failed to load todo metrics:", e);
         }
@@ -169,85 +166,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             `;
         }
         calendarGrid.innerHTML = html;
-    }
-
-    //  Fetch Gemini Insights
-    async function triggerGenAIInsights() {
-        if (!insightsContainer) return;
-        insightsContainer.innerHTML = `
-            <div class="p-8 text-center flex flex-col items-center justify-center space-y-3">
-                <div class="w-6 h-6 border-2 border-sky-400/30 border-t-sky-400 rounded-full animate-spin"></div>
-                <p class="text-xs text-slate-400 tracking-wide font-mono animate-pulse">SYNCHRONIZING SECURE PRODUCTIVITY GRADIENTS...</p>
-            </div>
-        `;
-
-        try {
-            // Strip core attributes for efficiency
-            const taskInputs = activeTodos.map(t => ({
-                title: t.title,
-                priority: t.priority,
-                category: t.category,
-                completed: t.completed,
-                due_date: t.due_date
-            }));
-
-            const response = await apiFetch("/api/ai/insights", {
-                method: "POST",
-                body: JSON.stringify({ tasks: taskInputs })
-            });
-
-            if (response && response.insights && response.insights.length > 0) {
-                insightsContainer.innerHTML = response.insights.map(ins => {
-                    const icon = {
-                        alert: "⚠️",
-                        recommendation: "💡",
-                        trend: "📈"
-                    }[ins.type] || "✨";
-
-                    const borderClass = {
-                        alert: "border-rose-900/30 hover:border-rose-500/20 bg-rose-950/5",
-                        recommendation: "border-sky-900/30 hover:border-sky-500/20 bg-sky-950/5",
-                        trend: "border-indigo-900/30 hover:border-indigo-500/20 bg-indigo-950/5"
-                    }[ins.type] || "border-slate-800";
-
-                    const titleColor = {
-                        alert: "text-rose-400",
-                        recommendation: "text-sky-400",
-                        trend: "text-indigo-400"
-                    }[ins.type] || "text-slate-250";
-                    return `
-                        <div class="p-4 border rounded-xl transition duration-300 ${borderClass} flex space-x-3">
-                            <span class="text-lg shrink-0 mt-0.5">${icon}</span>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-semibold uppercase tracking-wider ${titleColor}">${ins.title}</span>
-                                    <span class="text-3xs text-slate-400 font-mono">${ins.date}</span>
-                                </div>
-                                <p class="text-sm mt-1 text-slate-300 leading-relaxed">${ins.message}</p>
-                            </div>
-                        </div>
-                    `;
-                }).join("");
-            } else {
-                insightsContainer.innerHTML = `
-                    <div class="p-6 text-center text-slate-400 text-sm">
-                        Unable to fetch insights. Check credentials or try again.
-                    </div>
-                `;
-            }
-        } catch (e) {
-            console.error(e);
-            insightsContainer.innerHTML = `
-                <div class="p-6 text-center text-slate-400 text-sm">
-                    Fail safe insights unavailable. Connection threshold reached.
-                </div>
-            `;
-        }
-    }
-
-    // Manual Refresh trigger
-    if (refreshInsightsBtn) {
-        refreshInsightsBtn.addEventListener("click", triggerGenAIInsights);
     }
 
     // Initialize UI Loading

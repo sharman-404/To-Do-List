@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
     const btnContainer = document.getElementById("navAuthButtons");
     if (!btnContainer) return;
-    const token = localStorage.getItem("token");
-    const username = localStorage.getItem("username");
+    const token = _getToken();
+    const username = _tabUsername();
     if (token && username) {
         btnContainer.innerHTML = `
             <a href="/dashboard" class="px-5 py-2.5 bg-slate-800 text-slate-100 hover:bg-slate-700 rounded-xl transition duration-200 border border-slate-700/50 flex items-center space-x-2">
@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </button>
         `;
         document.getElementById("navLogout").addEventListener("click", () => {
-            localStorage.clear();
+            _clearTabSession();
             window.location.reload();
         });
     } else {

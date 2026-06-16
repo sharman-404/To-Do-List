@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    // Guard check
     requireSession();
     const usernameDisplay = document.getElementById("usernameDisplay");
     const userRoleBadge = document.getElementById("userRoleBadge");

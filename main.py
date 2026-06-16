@@ -18,7 +18,7 @@ load_dotenv()
 Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Bloom AI - Todo & User Management", version="1.0.0")
 templates = Jinja2Templates(directory="templates")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AQ.Ab8RN6L3OVPAbMmV8MuDJfrvtem5WAlAbB3kwJwDStBvyQUp8A")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR API KEY")
 GEMINI_VISION_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
 @app.get("/", response_class=HTMLResponse)
@@ -26,19 +26,29 @@ def root(request: Request):
     return templates.TemplateResponse(request=request, name="index.html") 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
-    return templates.TemplateResponse(request=request, name="login.html")
+    response = templates.TemplateResponse(request=request, name="login.html")
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    return response
 @app.get("/signup", response_class=HTMLResponse)
 def signup_page(request: Request):
-    return templates.TemplateResponse(request=request, name="signup.html")
+    response = templates.TemplateResponse(request=request, name="signup.html")
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    return response
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard_page(request: Request):
-    return templates.TemplateResponse(request=request, name="dashboard.html")
+    response = templates.TemplateResponse(request=request, name="dashboard.html")
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    return response
 @app.get("/tasks", response_class=HTMLResponse)
 def tasks_page(request: Request):
-    return templates.TemplateResponse(request=request, name="tasks.html")
+    response = templates.TemplateResponse(request=request, name="tasks.html")
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    return response
 @app.get("/admin", response_class=HTMLResponse)
 def admin_page(request: Request):
-    return templates.TemplateResponse(request=request, name="admin.html")
+    response = templates.TemplateResponse(request=request, name="admin.html")
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    return response
  
 # Setup auth scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
@@ -79,7 +89,7 @@ def get_current_admin(current_user: Models.User = Depends(get_current_user)):
         )
     return current_user
  
-# Seed default admin user on first boot if missing
+# Seed default admin user + categories on first boot
 @app.on_event("startup")
 def seed_admin_user():
     db = SessionLocal()
@@ -98,9 +108,22 @@ def seed_admin_user():
             db.add(new_admin)
             db.commit()
             print("🚀 Successfully seeded default administrator user: username='admin', pwd='Admin@123'")
+
+        # Seed default categories if none exist
+        if db.query(Models.Category).count() == 0:
+            defaults = [
+                Models.Category(name="work",     emoji="💼", color="sky",     description="Professional tasks and work deliverables"),
+                Models.Category(name="personal",  emoji="👤", color="violet",  description="Personal goals and lifestyle tasks"),
+                Models.Category(name="learning",  emoji="📚", color="indigo",  description="Study, courses and skill development"),
+                Models.Category(name="health",    emoji="❤️", color="emerald", description="Fitness, wellness and medical tasks"),
+                Models.Category(name="other",     emoji="✨", color="slate",   description="Miscellaneous tasks"),
+            ]
+            db.add_all(defaults)
+            db.commit()
+            print("🌱 Seeded 5 default categories.")
     except Exception as e:
         db.rollback()
-        print(f"⚠️ Failed to seed administrator user: {e}")
+        print(f"⚠️ Startup seed failed: {e}")
     finally:
         db.close()
  
@@ -296,12 +319,16 @@ def admin_override_todo(
     db: Session = Depends(get_db)
 ):
     valid_priorities = {"high", "medium", "low"}
-    valid_categories = {"work", "personal", "learning", "health", "other"}
+    # Fetch valid categories dynamically from the DB
+    valid_categories = {c.name for c in db.query(Models.Category).all()}
 
     if body.priority is not None and body.priority not in valid_priorities:
         raise HTTPException(status_code=400, detail="Priority must be 'high', 'medium', or 'low'.")
     if body.category is not None and body.category not in valid_categories:
-        raise HTTPException(status_code=400, detail="Category must be 'work', 'personal', 'learning', 'health', or 'other'.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid category. Valid categories are: {', '.join(sorted(valid_categories))}."
+        )
 
     db_todo = db.query(Models.Todo).filter(Models.Todo.id == todo_id).first()
     if not db_todo:
@@ -345,11 +372,36 @@ class PrioritySuggestRequest(BaseModel):
     due_date: Optional[str] = None
  
 @app.post("/api/ai/suggest-priority")
-async def suggest_priority(req: PrioritySuggestRequest):
-    """Uses Gemini to suggest a priority level (high/medium/low) AND category for a task."""
+async def suggest_priority(req: PrioritySuggestRequest, db: Session = Depends(get_db)):
+    """Uses Gemini to suggest a priority level (high/medium/low) AND category for a task.
+    Categories are sourced dynamically from the admin-managed Category table."""
+
+    # ── Fetch admin-defined categories from DB ────────────────────────────────
+    db_categories = db.query(Models.Category).order_by(Models.Category.name).all()
+    # Fallback to sensible defaults if table is somehow empty
+    if db_categories:
+        category_names = [c.name for c in db_categories]
+        category_rules = "\n".join(
+            f"- {c.name}: {c.description or c.name + ' related tasks'}"
+            for c in db_categories
+        )
+        fallback_category = category_names[0]
+    else:
+        category_names = ["work", "personal", "learning", "health", "other"]
+        category_rules = (
+            "- work: professional tasks, meetings, projects, deadlines, emails, office-related\n"
+            "- personal: personal errands, family, social activities, chores, finances\n"
+            "- learning: studying, courses, books, research, skill-building, tutorials\n"
+            "- health: exercise, medical appointments, diet, mental wellness, sleep\n"
+            "- other: anything that does not clearly fit the above categories"
+        )
+        fallback_category = "work"
+
+    valid_category_set = set(category_names)
+
     if not GEMINI_API_KEY:
-        return {"priority": "medium", "category": "work", "reason": "AI key not configured, defaulting to medium/work."}
- 
+        return {"priority": "medium", "category": fallback_category, "reason": "AI key not configured."}
+
     prompt = (
         f"You are a strict task classifier. Analyze the task and assign the correct priority AND category.\n\n"
         f"PRIORITY RULES:\n"
@@ -359,24 +411,21 @@ async def suggest_priority(req: PrioritySuggestRequest):
         f"  Examples: work meetings, gym sessions, learning tasks, planned errands\n"
         f"- low: optional, leisure, no deadline, recreational, can be skipped without consequence\n"
         f"  Examples: gaming, watching movies, casual hobbies, someday tasks\n\n"
-        f"CATEGORY RULES:\n"
-        f"- work: professional tasks, meetings, projects, deadlines, emails, office-related\n"
-        f"- personal: personal errands, family, social activities, chores, finances\n"
-        f"- learning: studying, courses, books, research, skill-building, tutorials\n"
-        f"- health: exercise, medical appointments, diet, mental wellness, sleep\n"
-        f"- other: anything that does not clearly fit the above categories\n\n"
+        f"CATEGORY RULES (you MUST pick one of the exact names listed below — no other values are allowed):\n"
+        f"{category_rules}\n\n"
+        f"Valid category values: {json.dumps(category_names)}\n\n"
         f"Task title: {req.title}\n"
         f"Description: {req.description or 'none'}\n"
         f"Due date: {req.due_date or 'not specified'}\n\n"
         f"Respond with ONLY this JSON, no explanation, no markdown:\n"
-        f"{{\"priority\": \"medium\", \"category\": \"work\", \"reason\": \"one short sentence\"}}"
+        f"{{\"priority\": \"medium\", \"category\": \"{fallback_category}\", \"reason\": \"one short sentence\"}}"
     )
 
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"temperature": 0.0, "maxOutputTokens": 1024, "thinkingConfig": {"thinkingBudget": 0}}
     }
- 
+
     async with httpx.AsyncClient(timeout=15) as client:
         resp = await client.post(
             f"{GEMINI_VISION_URL}?key={GEMINI_API_KEY}",
@@ -393,7 +442,7 @@ async def suggest_priority(req: PrioritySuggestRequest):
     try:
         text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
         print(f"[Priority AI] Extracted text: {text}")
-        
+
         # Strip possible markdown fences
         text = text.replace("```json", "").replace("```", "").strip()
         result = json.loads(text)
@@ -402,15 +451,16 @@ async def suggest_priority(req: PrioritySuggestRequest):
         if priority not in ("high", "medium", "low"):
             priority = "medium"
 
-        category = result.get("category", "work").lower().strip()
-        if category not in ("work", "personal", "learning", "health", "other"):
-            category = "other"
+        # Validate against the live admin-defined category set
+        category = result.get("category", fallback_category).lower().strip()
+        if category not in valid_category_set:
+            category = fallback_category
 
         print(f"[Priority AI] Final priority: {priority}, category: {category}")
         return {"priority": priority, "category": category, "reason": result.get("reason", "")}
     except Exception as e:
         print(f"[Priority AI] Parse error: {e}, raw text was: {resp.text[:500]}")
-        return {"priority": "medium", "category": "work", "reason": "Could not parse AI response."}
+        return {"priority": "medium", "category": fallback_category, "reason": "Could not parse AI response."}
  
 # ── NEW: OCR / AI extract endpoint ───────────────────────────────────────────
 class OcrExtractRequest(BaseModel):
@@ -418,13 +468,24 @@ class OcrExtractRequest(BaseModel):
     mime_type: str      # e.g. "image/png"
  
 @app.post("/api/ai/extract")
-async def ai_extract_tasks(req: OcrExtractRequest):
+async def ai_extract_tasks(req: OcrExtractRequest, db: Session = Depends(get_db)):
     """
     Accepts a base64-encoded image, sends it to Gemini Vision,
     and returns structured task objects parsed from the image text.
+    Categories are sourced dynamically from the admin-managed Category table.
     """
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=503, detail="GEMINI_API_KEY is not configured on the server.")
+
+    # ── Fetch admin-defined categories from DB ────────────────────────────────
+    db_categories = db.query(Models.Category).order_by(Models.Category.name).all()
+    if db_categories:
+        category_names = [c.name for c in db_categories]
+        fallback_category = category_names[0]
+    else:
+        category_names = ["work", "personal", "learning", "health", "other"]
+        fallback_category = "work"
+    valid_categories = set(category_names)
  
     # Strip the data URI prefix if present to get raw base64
     raw_b64 = req.image_base64
@@ -437,18 +498,21 @@ async def ai_extract_tasks(req: OcrExtractRequest):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid base64 image data.")
  
+    category_list_str = "/".join(category_names)
     prompt = (
         "You are an OCR and task extraction assistant. Analyze this image carefully.\n"
         "1. Extract ALL visible text from the image.\n"
         "2. Identify any tasks, to-dos, action items, or goals from that text.\n"
-        "3. For each task assign: title, description, priority (high/medium/low), "
-        "category (work/personal/learning/health/other), and dueDate (YYYY-MM-DD or null).\n\n"
+        f"3. For each task assign: title, description, priority (high/medium/low), "
+        f"category (you MUST use one of these exact values: {category_list_str}), "
+        f"and dueDate (YYYY-MM-DD or null).\n\n"
+        f"Valid category values are ONLY: {json.dumps(category_names)} — do not invent new ones.\n\n"
         "Respond ONLY with a valid JSON object in this exact format (no markdown, no extra text):\n"
         "{\n"
         "  \"extractedText\": \"<all text found in image>\",\n"
         "  \"tasks\": [\n"
-        "    {\"title\": \"...\", \"description\": \"...\", \"priority\": \"medium\", "
-        "\"category\": \"work\", \"dueDate\": null}\n"
+        f"    {{\"title\": \"...\", \"description\": \"...\", \"priority\": \"medium\", "
+        f"\"category\": \"{fallback_category}\", \"dueDate\": null}}\n"
         "  ]\n"
         "}"
     )
@@ -491,14 +555,14 @@ async def ai_extract_tasks(req: OcrExtractRequest):
  
         # Sanitize each task
         valid_priorities = {"high", "medium", "low"}
-        valid_categories = {"work", "personal", "learning", "health", "other"}
         sanitized = []
         for t in tasks:
+            raw_cat = (t.get("category") or fallback_category).lower().strip()
             sanitized.append({
                 "title": str(t.get("title", "Untitled Task"))[:200],
                 "description": str(t.get("description", ""))[:500] if t.get("description") else None,
                 "priority": t.get("priority", "medium") if t.get("priority") in valid_priorities else "medium",
-                "category": t.get("category", "work") if t.get("category") in valid_categories else "work",
+                "category": raw_cat if raw_cat in valid_categories else fallback_category,
                 "dueDate": t.get("dueDate")
             })
  
@@ -554,6 +618,116 @@ async def get_ai_insights(req: InsightsRequest):
         return {"insights": []}
  
  
+# ── Public: list categories (any authenticated user) ──────────────────────────
+@app.get("/api/categories", response_model=List[schemas.CategoryResponse])
+def list_categories_public(
+    current_user: Models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Return all admin-defined categories. Used by the task form and filter UI."""
+    return db.query(Models.Category).order_by(Models.Category.name).all()
+
+# ── category CRUD endpoints (admin only) ─────────────────────────────────────
+
+@app.get("/api/admin/categories", response_model=List[schemas.CategoryResponse])
+def list_categories(
+    _admin: Models.User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Return all categories ordered alphabetically."""
+    return db.query(Models.Category).order_by(Models.Category.name).all()
+
+@app.post("/api/admin/categories", response_model=schemas.CategoryResponse, status_code=status.HTTP_201_CREATED)
+def create_category(
+    data: schemas.CategoryCreate,
+    _admin: Models.User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Create a new category. Name must be unique."""
+    name_clean = data.name.strip().lower()
+    if not name_clean:
+        raise HTTPException(status_code=400, detail="Category name cannot be empty.")
+    existing = db.query(Models.Category).filter(Models.Category.name == name_clean).first()
+    if existing:
+        raise HTTPException(status_code=409, detail=f"Category '{name_clean}' already exists.")
+    cat = Models.Category(
+        name=name_clean,
+        emoji=data.emoji or "📌",
+        color=data.color or "slate",
+        description=data.description
+    )
+    db.add(cat)
+    db.commit()
+    db.refresh(cat)
+    return cat
+
+@app.get("/api/admin/categories/{category_id}", response_model=schemas.CategoryResponse)
+def get_category(
+    category_id: int,
+    _admin: Models.User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    cat = db.query(Models.Category).filter(Models.Category.id == category_id).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found.")
+    return cat
+
+@app.put("/api/admin/categories/{category_id}", response_model=schemas.CategoryResponse)
+def update_category(
+    category_id: int,
+    data: schemas.CategoryUpdate,
+    _admin: Models.User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Update name, emoji, color, or description of an existing category."""
+    cat = db.query(Models.Category).filter(Models.Category.id == category_id).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found.")
+    if data.name is not None:
+        name_clean = data.name.strip().lower()
+        if not name_clean:
+            raise HTTPException(status_code=400, detail="Category name cannot be empty.")
+        conflict = db.query(Models.Category).filter(
+            Models.Category.name == name_clean,
+            Models.Category.id != category_id
+        ).first()
+        if conflict:
+            raise HTTPException(status_code=409, detail=f"Category '{name_clean}' already exists.")
+        cat.name = name_clean
+    if data.emoji is not None:
+        cat.emoji = data.emoji
+    if data.color is not None:
+        cat.color = data.color
+    if data.description is not None:
+        cat.description = data.description
+    db.commit()
+    db.refresh(cat)
+    return cat
+
+@app.delete("/api/admin/categories/{category_id}")
+def delete_category(
+    category_id: int,
+    _admin: Models.User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a category. Todos that reference it are reassigned to 'other'
+    (or left as-is if 'other' is also being deleted — rare edge case).
+    """
+    cat = db.query(Models.Category).filter(Models.Category.id == category_id).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found.")
+    # Reassign todos that use this category to 'other'
+    affected = db.query(Models.Todo).filter(Models.Todo.category == cat.name).all()
+    fallback = "other" if cat.name != "other" else "work"
+    for todo in affected:
+        todo.category = fallback
+    db.delete(cat)
+    db.commit()
+    return {
+        "detail": f"Category '{cat.name}' deleted. {len(affected)} task(s) reassigned to '{fallback}'."
+    }
+
 # ── debug and diagnostic utility routes ───────────────────────────────────────
 @app.get("/approve-all")
 def approve_all_users_diagnostic(db: Session = Depends(get_db)):

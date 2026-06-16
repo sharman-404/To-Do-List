@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", async () => {
     // Guard check
-    requireSession();
+    if (!requireSession()) return;
  
     // Elements
     const tasksTableBody = document.getElementById("tasksTableBody");
@@ -27,6 +27,69 @@ document.addEventListener("DOMContentLoaded", async () => {
     const adminTabMobile = document.getElementById("adminTabMobile");
     let allTasksList = [];
     let ocrParsedPendingTasks = [];
+    let dynamicCategories = []; // loaded from /api/categories
+
+    // ── Load admin-defined categories and populate all category UI ───────────
+    async function loadCategories() {
+        try {
+            dynamicCategories = await apiFetch("/api/categories");
+        } catch (e) {
+            console.warn("Could not load categories from API, using fallback.", e);
+            dynamicCategories = [
+                { name: "work",     emoji: "💼", color: "sky"     },
+                { name: "personal", emoji: "👤", color: "violet"  },
+                { name: "learning", emoji: "📚", color: "indigo"  },
+                { name: "health",   emoji: "❤️", color: "emerald" },
+                { name: "other",    emoji: "✨", color: "slate"   },
+            ];
+        }
+
+        // Populate the toolbar category <select>
+        if (categoryFilterSelect) {
+            categoryFilterSelect.innerHTML = `<option value="all" selected>All Categories</option>` +
+                dynamicCategories.map(c =>
+                    `<option value="${c.name}">${c.emoji} ${c.name.charAt(0).toUpperCase() + c.name.slice(1)}</option>`
+                ).join("");
+        }
+
+        // Populate the sidebar category nav buttons
+        const navCategoryDropdown = document.getElementById("navCategoryDropdown");
+        if (navCategoryDropdown) {
+            navCategoryDropdown.innerHTML = dynamicCategories.map(c =>
+                `<button data-filter-type="category" data-filter-value="${c.name}"
+                    class="nav-filter-btn w-full flex items-center space-x-2.5 px-3 py-2 text-xs text-slate-400 hover:text-sky-300 hover:bg-sky-950/10 rounded-lg transition">
+                    <span class="shrink-0">${c.emoji}</span><span>${c.name.charAt(0).toUpperCase() + c.name.slice(1)}</span>
+                </button>`
+            ).join("");
+
+            // Re-wire the sidebar filter buttons after dynamic render
+            navCategoryDropdown.querySelectorAll(".nav-filter-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const type = btn.getAttribute("data-filter-type");
+                    const value = btn.getAttribute("data-filter-value");
+
+                    document.querySelectorAll(".nav-filter-btn").forEach(b => b.classList.remove("bg-slate-800/60", "text-slate-100"));
+                    btn.classList.add("bg-slate-800/60", "text-slate-100");
+
+                    if (mainContent) mainContent.classList.add("hidden");
+                    if (filteredViewPanel) filteredViewPanel.classList.remove("hidden");
+
+                    const cat = dynamicCategories.find(c => c.name === value);
+                    if (filteredViewTitle) filteredViewTitle.textContent = `${cat?.emoji || "📌"} ${(cat?.name || value).charAt(0).toUpperCase() + (cat?.name || value).slice(1)} Tasks`;
+                    if (filteredViewSubtitle) filteredViewSubtitle.textContent = "Filtered by category";
+
+                    renderFilteredTasks(allTasksList.filter(t => t.category === value));
+                });
+            });
+        }
+    }
+
+    // Helper: get display label for a category name using dynamic categories
+    function getCatLabel(categoryName) {
+        const cat = dynamicCategories.find(c => c.name === categoryName);
+        if (cat) return `${cat.emoji} ${cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}`;
+        return `📌 ${categoryName}`;
+    }
 
     // Reveal admin sidebar links if current user is admin
     async function initAdminNav() {
@@ -104,13 +167,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 low: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
             }[item.priority] || "bg-slate-500/10 text-slate-400";
 
-            const catLabel = {
-                work: "💼 Work",
-                personal: "👤 Personal",
-                learning: "📚 Learning",
-                health: "❤️ Health",
-                other: "✨ Other"
-            }[item.category] || `📌 ${item.category}`;
+            const catLabel = getCatLabel(item.category);
 
             // Priority and category are admin-only after creation — show lock indicator
             const adminOnlyTitle = "title=\"Priority and category can only be changed by an admin\"";
@@ -328,10 +385,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 medium: "bg-amber-500/10 text-amber-400 border-amber-500/20",
                 low:    "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
             }[item.priority] || "bg-slate-500/10 text-slate-400";
-            const catLabel = {
-                work: "💼 Work", personal: "👤 Personal", learning: "📚 Learning",
-                health: "❤️ Health", other: "✨ Other"
-            }[item.category] || `📌 ${item.category}`;
+            const catLabel = getCatLabel(item.category);
             const aiBadge = item.ai_generated
                 ? `<span class="mx-1.5 shrink-0 px-1.5 py-0.5 rounded ai-badge text-[9px] font-mono tracking-widest font-bold uppercase">AI</span>`
                 : "";
@@ -409,7 +463,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Title labels
             const titleMap = {
                 priority: { high: "⬆ High Priority Tasks", medium: "➡ Medium Priority Tasks", low: "⬇ Low Priority Tasks" },
-                category: { work: "💼 Work Tasks", personal: "👤 Personal Tasks", learning: "📚 Learning Tasks", health: "❤️ Health Tasks", other: "✨ Other Tasks" },
                 status:   { pending: "🕐 Pending Tasks", completed: "✅ Completed Tasks" }
             };
             const subtitleMap = {
@@ -418,7 +471,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 status:   "Filtered by completion status"
             };
 
-            if (filteredViewTitle) filteredViewTitle.textContent = titleMap[type]?.[value] || value;
+            let titleLabel = titleMap[type]?.[value];
+            if (!titleLabel && type === "category") {
+                const cat = dynamicCategories.find(c => c.name === value);
+                titleLabel = cat ? `${cat.emoji} ${cat.name.charAt(0).toUpperCase() + cat.name.slice(1)} Tasks` : `📌 ${value} Tasks`;
+            }
+            if (filteredViewTitle) filteredViewTitle.textContent = titleLabel || value;
             if (filteredViewSubtitle) filteredViewSubtitle.textContent = subtitleMap[type] || "";
 
             // Filter tasks
@@ -617,5 +675,6 @@ document.addEventListener("DOMContentLoaded", async () => {
  
     // Initialize
     await initAdminNav();
+    await loadCategories();
     await loadCheckedTasks();
 });

@@ -14,6 +14,15 @@ class User(Base):
     blocked = Column(Boolean, default=False)
     todos = relationship("Todo", back_populates="owner", cascade="all, delete-orphan")
 
+class Category(Base):
+    __tablename__ = "categories"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True, nullable=False)
+    emoji = Column(String, default="📌")
+    color = Column(String, default="slate")          # tailwind color key: sky, violet, indigo, emerald, rose, slate …
+    description = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
 class Todo(Base):
     __tablename__ = "todos"
     id = Column(Integer, primary_key=True, index=True)

@@ -18,7 +18,7 @@ load_dotenv()
 Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Bloom AI - Todo & User Management", version="1.0.0")
 templates = Jinja2Templates(directory="templates")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR API KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "ENTER YOUR API KEY HERE")
 GEMINI_VISION_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
 @app.get("/", response_class=HTMLResponse)

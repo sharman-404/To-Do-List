@@ -162,6 +162,54 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
+function renderPendingUsers() {
+    const tbody = document.getElementById("pendingUsersTableBody");
+    if (!tbody) return;
+    const pendingUsers =
+        registeredUsers.filter(u => !u.approved);
+
+    if (pendingUsers.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3"
+                    class="p-6 text-center text-slate-400">
+                    No pending approvals.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = pendingUsers.map(user => `
+        <tr class="border-b border-slate-800/40">
+            <td class="p-4">${user.username}</td>
+            <td class="p-4">${user.email}</td>
+            <td class="p-4">
+                <button
+                    data-uid="${user.id}"
+                    class="pending-approve-btn px-3 py-1 bg-sky-500 text-slate-950 rounded-lg">
+                    Approve
+                </button>
+            </td>
+        </tr>
+    `).join("");
+
+    document.querySelectorAll(".pending-approve-btn")
+        .forEach(btn => {
+            btn.addEventListener("click", async () => {
+
+                const uid = btn.dataset.uid;
+
+                await apiFetch(`/api/admin/approve/${uid}`, {
+                    method: "PUT"
+                });
+
+                await loadUsers();
+                renderPendingUsers();
+            });
+        });
+}
+
     // ════════════════════════════════════════════════════════════════════════
     //  CATEGORIES  (full CRUD)
     // ════════════════════════════════════════════════════════════════════════
@@ -597,6 +645,49 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
     }
+
+
+
+    // =============================
+    // ADMIN SECTION NAVIGATION
+    // =============================
+    const usersSection = document.getElementById("usersSection");
+    const statsSection = document.getElementById("statsSection");
+    const pendingSection = document.getElementById("pendingSection");
+
+    function hideAdminSections() {
+        usersSection?.classList.add("hidden");
+        statsSection?.classList.add("hidden");
+        pendingSection?.classList.add("hidden");
+    }
+
+    document.querySelectorAll(".admin-nav-btn").forEach(btn =>{
+        btn.addEventListener("click", () =>{
+            const section = btn.dataset.section;
+            if(section === "categoriesSection") {
+                document.getElementById("catList")?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+                return;
+            }
+
+            hideAdminSections();
+
+            if(section === "usersSection") {
+                usersSection?.classList.remove("hidden")
+            }
+
+            if(section === "statsSection") {
+                statsSection?.classList.remove("hidden");
+            }
+
+            if (section === "pendingSection") {
+                pendingSection?.classList.remove("hidden");
+                renderPendingUsers();
+            }
+        })
+    });
 
     // ════════════════════════════════════════════════════════════════════════
     //  INIT  — load in the correct order so categories[] is ready

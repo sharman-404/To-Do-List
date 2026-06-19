@@ -65,6 +65,25 @@
                 <span>Admin Console</span>
             </a>
 
+            <div class="pt-3 pb-1 px-2">
+                <span class="text-3xs font-mono uppercase tracking-widest text-slate-600">Admin Sections</span>
+            </div>
+
+            <button class="admin-nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-900/40"data-section="usersSection">
+                👥User Management
+            </button>
+
+            <button class="admin-nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-900/40"data-section="categoriesSection">
+                📂 Category Management
+            </button>
+
+            <button class="admin-nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-900/40"data-section="statsSection">
+                📊 Statistics
+            </button>
+
+            <button class="admin-nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-900/40"data-section="pendingSection">
+                ⏳Pending Approvals
+            </button>
             <!-- Divider -->
             <div class="pt-3 pb-1 px-2">
                 <span class="text-3xs font-mono uppercase tracking-widest text-slate-600">Filter Tasks</span>
@@ -228,51 +247,77 @@
                 <div id="feedbackText">Diagnostic feedback logs...</div>
             </section>
             <!-- Admin Statistics Overview -->
-            <section class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 select-none">
-                <div class="p-5 rounded-xl glass-panel">
-                    <span class="text-3xs font-mono uppercase text-slate-400 font-semibold tracking-widest">Total Accounts Registered</span>
-                    <h4 id="adminStatsTotal" class="font-display font-bold text-2xl text-slate-100 mt-1">0</h4>
-                </div>
-                <div class="p-5 rounded-xl glass-panel border-l-2 border-l-emerald-500/50">
-                    <span class="text-3xs font-mono uppercase text-emerald-400 font-semibold tracking-widest">Approved & Active Sessions</span>
-                    <h4 id="adminStatsApproved" class="font-display font-bold text-2xl text-emerald-400 mt-1">0</h4>
-                </div>
-                <div class="p-5 rounded-xl glass-panel border-l-2 border-l-amber-500/50 animate-pulse">
-                    <span class="text-3xs font-mono uppercase text-amber-400 font-semibold tracking-widest">Pending Verification Queue</span>
-                    <h4 id="adminStatsPending" class="font-display font-bold text-2xl text-amber-400 mt-1">0</h4>
+            <section id="statsSection">
+                <section class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 select-none">
+                    <div class="p-5 rounded-xl glass-panel">
+                        <span class="text-3xs font-mono uppercase text-slate-400 font-semibold tracking-widest">Total Accounts Registered</span>
+                        <h4 id="adminStatsTotal" class="font-display font-bold text-2xl text-slate-100 mt-1">0</h4>
+                    </div>
+                    <div class="p-5 rounded-xl glass-panel border-l-2 border-l-emerald-500/50">
+                        <span class="text-3xs font-mono uppercase text-emerald-400 font-semibold tracking-widest">Approved & Active Sessions</span>
+                        <h4 id="adminStatsApproved" class="font-display font-bold text-2xl text-emerald-400 mt-1">0</h4>
+                    </div>
+                    <div class="p-5 rounded-xl glass-panel border-l-2 border-l-amber-500/50 animate-pulse">
+                        <span class="text-3xs font-mono uppercase text-amber-400 font-semibold tracking-widest">Pending Verification Queue</span>
+                        <h4 id="adminStatsPending" class="font-display font-bold text-2xl text-amber-400 mt-1">0</h4>
+                    </div>
+                </section>
+            </section>
+
+            <section id="pendingSection" class="hidden">
+                <div class="glass-panel rounded-2xl overflow-hidden border border-slate-900/40 mt-8">
+                    <div class="px-6 py-4 bg-slate-950/40 border-b border-slate-900/40">
+                        <h3 class="font-display font-bold text-sm text-slate-100">
+                            Pending Approvals
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-900/60 text-slate-400 font-mono text-3xs uppercase tracking-widest bg-slate-950/20">
+                                    <th class="p-4">Username</th>
+                                    <th class="p-4">Email</th>
+                                    <th class="p-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingUsersTableBody">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
             <!-- Users Management Table -->
-            <section class="glass-panel rounded-2xl overflow-hidden border border-slate-900/40 mt-8">
-                <div class="px-6 py-4 bg-slate-950/40 border-b border-slate-900/40 flex items-center justify-between">
-                    <h3 class="font-display font-bold text-sm text-slate-100 flex items-center space-x-2">
-                        <i data-lucide="users" class="w-4 h-4 text-sky-400"></i>
-                        <span>Registered Accounts</span>
-                    </h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b border-slate-900/60 text-slate-400 font-mono text-3xs uppercase tracking-widest bg-slate-950/20 select-none">
-                                <th class="p-4">Username</th>
-                                <th class="p-4">Email</th>
-                                <th class="p-4 w-24">Role</th>
-                                <th class="p-4 w-28">Status</th>
-                                <th class="p-4 w-36 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="usersTableBody">
-                            <tr>
-                                <td colspan="5" class="p-8 text-center text-sm text-slate-400 animate-pulse">
-                                    Loading user registers...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <section id="usersSection" class="hidden">
+                <section class="glass-panel rounded-2xl overflow-hidden border border-slate-900/40 mt-8">
+                    <div class="px-6 py-4 bg-slate-950/40 border-b border-slate-900/40 flex items-center justify-between">
+                        <h3 class="font-display font-bold text-sm text-slate-100 flex items-center space-x-2">
+                            <i data-lucide="users" class="w-4 h-4 text-sky-400"></i>
+                            <span>Registered Accounts</span>
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-900/60 text-slate-400 font-mono text-3xs uppercase tracking-widest bg-slate-950/20 select-none">
+                                    <th class="p-4">Username</th>
+                                    <th class="p-4">Email</th>
+                                    <th class="p-4 w-24">Role</th>
+                                    <th class="p-4 w-28">Status</th>
+                                    <th class="p-4 w-36 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr>
+                                    <td colspan="5" class="p-8 text-center text-sm text-slate-400 animate-pulse">
+                                        Loading user registers...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
             </section>
-
             <!-- Task Priority & Category Override Panel -->
             <section class="glass-panel rounded-2xl overflow-hidden border border-slate-900/40 mt-8">
                 <div class="px-6 py-4 bg-slate-950/40 border-b border-slate-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
